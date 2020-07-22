@@ -1,9 +1,18 @@
 #include"A5_1.hpp"
+#include<string>
+#include<omp.h>
 
-
-int main() {
+int main(int argc, char const* argv[]) {
 	u64 count = 0;
 	int prefixLength = 3;
+	int threadNumber = 1;
+
+	for (int i = 0; i < argc; i++) {
+		if (!strcmp(argv[i], "-pfx")) prefixLength = atoi(argv[i + 1]);
+		if (!strcmp(argv[i], "-t")) threadNumber = atoi(argv[i + 1]);
+
+	}
+	
 	vector<int> relatedBitsOf1Output = { 18, 19 + 21, 41 + 22, 17,19 + 20, 41 + 21, 8, 19 + 10, 41 + 10 };
 	set<int> relatedBitsOf5Outputs;
 	for (int offset = 0; offset < prefixLength; ++offset) {
@@ -18,38 +27,49 @@ int main() {
 	int involvedBitNumber = involvedBits.size();
 	u64 total = 1;
 	total <<= involvedBitNumber;
-	set<u64> Lz0_z4;
+	
 
-	A5_1_S100 runner(0);
-	u64 iniState = 0;
-	bool satisfyPattern = true;
-	u64 pattern = 0x1f;
-	vector<u64> patternBits;
-	for (int i = 0; i < prefixLength; ++i) {
-		patternBits.push_back(bit(pattern, i));
-	}
-	for (count = 0; count < total; ++count) {
-		iniState = 0;
-		satisfyPattern = true;
-		for (int loop = 0; loop < involvedBits.size(); ++loop) {
-			setBitVal(iniState, involvedBits[loop], bit(count, loop));
-		}
-		runner.update(iniState);
+	
+
+#pragma omp parallel for 
+	for (int prefix = 0; prefix < (1 << prefixLength); prefix++) {
+		u64 pattern = prefix;
+		set<u64> Lz0_z4;
+		vector<u64> patternBits;
 		for (int i = 0; i < prefixLength; ++i) {
-			if (runner.output() != patternBits[i]) {
-				satisfyPattern = false;
-				break;
+			patternBits.push_back(bit(pattern, i));
+		}
+		A5_1_S100 runner(0);
+		u64 iniState = 0;
+		bool satisfyPattern = true;
+		for (count = 0; count < total; ++count) {
+			iniState = 0;
+			satisfyPattern = true;
+			for (int loop = 0; loop < involvedBits.size(); ++loop) {
+				setBitVal(iniState, involvedBits[loop], bit(count, loop));
+			}
+			runner.update(iniState);
+			for (int i = 0; i < prefixLength; ++i) {
+				if (runner.output() != patternBits[i]) {
+					satisfyPattern = false;
+					break;
+				}
+			}
+			if (satisfyPattern) {
+				Lz0_z4.insert(iniState);
 			}
 		}
-		if (satisfyPattern) {
-			Lz0_z4.insert(iniState);
-		}
+		ofstream file1;
+		file1.open("L"+to_string(prefixLength)+"prefix"+ to_string(prefix)+".txt");
+		file1 << hex << "prefix=" << pattern << endl;
+		file1 << dec << "The merged list L has #L=" << Lz0_z4.size() << endl;
+		file1.close();
 	}
-	ofstream file1;
-	file1.open("count.txt");
-	file1<<hex<<"prefix="<<pattern<<endl;
-	file1<<dec << "The merged list L has #L=" << Lz0_z4.size() << endl;
-	file1.close();
+
+
+
+	
+	
 
 
 	getchar();

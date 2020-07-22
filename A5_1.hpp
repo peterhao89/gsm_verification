@@ -34,7 +34,7 @@ u64 rand_64()//产生64位随机数
 	return Z[0];
 }
 
-void setBitVal(u64& reg, int bitNo, u64 val) {
+inline void setBitVal(u64& reg, int bitNo, u64 val) {
 	u64 msk = 1;
 	msk <<= bitNo;
 	if (val != 0) {
@@ -52,16 +52,16 @@ public:
 		update(state);
 	}
 
-	void update(u64 state ) {
+	inline void update(u64 state ) {
 		R1 = state & R1MASK;
 		R2 = (state >> 19) & R2MASK;
 		R3 = (state >> (41)) & R3MASK;
 	}
-	u64 getWholeState() {
+	inline u64 getWholeState() {
 		return (R1 | (R2 << 19) | (R3 << 41));
 	}
 
-	u64 output() {
+	inline u64 output() {
 		clockStopGo();
 		return (bit(R1,18) ^ bit(R2,21)^bit(R3,22));
 	}
@@ -69,11 +69,11 @@ public:
 private:
 	u64 R1,R2,R3;
 
-	u64 maj(u64 a, u64 b, u64 c) {
+	inline u64 maj(u64 a, u64 b, u64 c) {
 		return ((a&b)^(b&c)^(a&c));
 	}
 
-	void clockStopGo() {
+	inline void clockStopGo() {
 		u64 a1, a2, a3;
 		a1 = bit(R1, 8);
 		a2 = bit(R2, 10);
@@ -84,21 +84,21 @@ private:
 		if (a3 == mVal)updateR3();
 	}
 
-	void updateR1() {
+	inline void updateR1() {
 		u64 opt = bit(R1, 18) ^ bit(R1, 17) ^ bit(R1, 16) ^ bit(R1, 13);
 		R1 <<= 1;
 		R1 &= R1MASK;
 		setBitVal(R1, 0, opt);
 	}
 
-	void updateR2() {
+	inline void updateR2() {
 		u64 opt = bit(R2, 21) ^ bit(R2, 20);
 		R2 <<= 1;
 		R2 &= R2MASK;
 		setBitVal(R2, 0, opt);
 	}
 
-	void updateR3() {
+	inline void updateR3() {
 		u64 opt = bit(R3, 22) ^ bit(R3, 21) ^ bit(R3, 20) ^ bit(R3, 7);
 		R3 <<= 1;
 		R3 &= R3MASK;
