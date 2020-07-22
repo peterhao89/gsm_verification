@@ -1,6 +1,7 @@
 #include"A5_1.hpp"
 #include<string>
 #include<omp.h>
+#include<cstring>
 
 int main(int argc, char const* argv[]) {
 	u64 count = 0;
@@ -27,7 +28,7 @@ int main(int argc, char const* argv[]) {
 	int involvedBitNumber = involvedBits.size();
 	u64 total = 1;
 	total <<= involvedBitNumber;
-	
+	//omp_set_num_threads(6);	
 
 	
 
