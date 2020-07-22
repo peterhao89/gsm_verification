@@ -6,9 +6,9 @@ int main() {
 	int prefixLength = 3;
 	vector<int> relatedBitsOf1Output = { 18, 19 + 21, 41 + 22, 17,19 + 20, 41 + 21, 8, 19 + 10, 41 + 10 };
 	set<int> relatedBitsOf5Outputs;
-	for (int offset = 0; offset < 3; ++offset) {
+	for (int offset = 0; offset < prefixLength; ++offset) {
 		for (int i = 0; i < relatedBitsOf1Output.size(); ++i) {
-			relatedBitsOf5Outputs.insert(relatedBitsOf1Output[i]+offset);
+			relatedBitsOf5Outputs.insert(relatedBitsOf1Output[i]-offset);
 		}
 	}
 	vector<int> involvedBits;
@@ -45,9 +45,11 @@ int main() {
 			Lz0_z4.insert(iniState);
 		}
 	}
-
-	cout << "The merged list L has #L=" << Lz0_z4.size() << endl;
-
+	ofstream file1;
+	file1.open("count.txt");
+	file1<<hex<<"prefix="<<pattern<<endl;
+	file1<<dec << "The merged list L has #L=" << Lz0_z4.size() << endl;
+	file1.close();
 
 
 	getchar();

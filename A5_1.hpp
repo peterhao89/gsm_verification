@@ -3,7 +3,7 @@
 #include<set>
 #include<algorithm>
 #include <immintrin.h>
-#include<zmmintrin.h>
+//#include<zmmintrin.h>
 #include<fstream>
 #include<iostream>
 using namespace std;
