@@ -9,7 +9,7 @@ int main()
 	u8 check = 0,ns[15],z[2];
 	struct isd2 *isd2_table[4][4];
 	double Pr[4][4];
-	struct datalist2 *list2[5];
+	struct datalist2 *list2[6];
 	struct datalist3 *list3[4];
 	struct datalist4 *list4[3];
 	struct datalist5 *list5[2];

@@ -3,14 +3,30 @@
 #include<omp.h>
 #include<cstring>
 
+#define TEST 0
+#define MERGE (1-TEST)
+
+#if TEST
+
+int main() {
+	return 0;
+}
+
+#endif
+
+
+#if MERGE
+
 int main(int argc, char const* argv[]) {
 	u64 count = 0;
-	int prefixLength = 3;
+	int prefixLength = 2;
 	int threadNumber = 1;
 	for (int i = 0; i < argc; i++) {
-		if (!strcmp(argv[i], "-pfx")) prefixLength = atoi(argv[i + 1]);
+		if (!strcmp(argv[i], "-pl")) prefixLength = atoi(argv[i + 1]);
 		if (!strcmp(argv[i], "-t")) threadNumber = atoi(argv[i + 1]);
 	}
+	cout << prefixLength << endl;
+	cout << threadNumber << endl;
 	vector<int> relatedBitsOf1Output = { 18, 19 + 21, 41 + 22, 17,19 + 20, 41 + 21, 8, 19 + 10, 41 + 10 };
 	set<int> relatedBitsOf5Outputs;
 	for (int offset = 0; offset < prefixLength; ++offset) {
@@ -59,6 +75,9 @@ int main(int argc, char const* argv[]) {
 		file1 << hex << "prefix=" << pattern << endl;
 		file1 << dec << "The merged list L has #L=" << Lz0_z4.size() << endl;
 		file1.close();
+		cout << hex << "prefix=" << pattern << endl;
+		cout << dec << "The merged list L has #L=" << Lz0_z4.size() << endl;
 	}
 	return 0;
 }
+#endif
