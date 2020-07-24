@@ -133,9 +133,9 @@ public:
 	}
 
 	string getClockValue() {
-		string output = "";
+		string output = "|";
 		for (set<int>::iterator ite = clockBitPositions.begin(); ite != clockBitPositions.end(); ++ite) {
-			output += initMC[*ite]?"1":"0";
+			output += initMC[*ite]?"1|":"0|";
 		}
 		return output;
 	}
@@ -194,7 +194,7 @@ public:
 	string getNonClockBitPositions() {
 		string output = "|";
 		for (set<int>::iterator ite = knownBitPositions.begin(); ite != knownBitPositions.end(); ++ite) {
-			if (clockBitPositions.find(*ite) != clockBitPositions.end()) {
+			if (clockBitPositions.find(*ite) == clockBitPositions.end()) {
 				output += to_string(*ite);
 				output += "|";
 			}
@@ -362,6 +362,7 @@ public:
 
 	void outputTable(ostream & o) {
 		string header = "clkPos;r1Pos;r2Pos;r3Pos;clkVal;knownPos;nclkPos;#clk;#nclk;#total;\n";
+		o << header;
 		for (MaskClockSet::iterator ite = collector.begin(); ite != collector.end(); ++ite) {
 			Deductor ddct(*ite, totalSteps);
 			o << ddct.getReportLine() << "\n";
