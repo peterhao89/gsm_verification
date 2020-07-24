@@ -9,8 +9,13 @@
 #if TEST
 
 int main() {
-	KnownBitsDeduction dducer(2);
-	dducer.outputTable(std::cout);
+	int bitNumber = 5;
+	KnownBitsDeduction dducer(5);
+	ofstream tabFile;
+	tabFile.open("L" + to_string(bitNumber) + "ClockBitRelation.txt");
+	dducer.outputTable(tabFile);
+	tabFile.close();
+	cout << "Finish prefix of size " << bitNumber << "\n";
 
 	/*
 	MaskAndClock mc;
