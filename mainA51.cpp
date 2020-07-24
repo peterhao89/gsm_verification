@@ -3,13 +3,38 @@
 #include<omp.h>
 #include<cstring>
 
-#define TEST 0
+#define TEST 1
 #define MERGE (1-TEST)
 
 #if TEST
 
 int main() {
-	return 0;
+	KnownBitsDeduction dducer(2);
+	dducer.outputTable(std::cout);
+
+	/*
+	MaskAndClock mc;
+	Deductor ddct= Deductor(mc, 0);
+	MaskClockSet collector = ddct.getCollector();
+	cout << collector.size() << endl;
+	int count = 0;
+	for (MaskClockSet::iterator ite = collector.begin(); ite != collector.end(); ++ite) {
+		cout << "No. " << count++ << endl;
+		for (int i = 0; i < 64; ++i) {
+			if ((*ite)[64 + i] == 1)cout << i << ",";
+		}
+		cout << endl;
+
+
+		Deductor one(*ite, 1);
+		MaskClockSet msk = one.getCollector();
+		cout << msk.size() << endl;
+	}
+
+
+	*/
+
+		return 0;
 }
 
 #endif
@@ -41,7 +66,7 @@ int main(int argc, char const* argv[]) {
 	int involvedBitNumber = involvedBits.size();
 	u64 total = 1;
 	total <<= involvedBitNumber;
-	//omp_set_num_threads(6);	
+	omp_set_num_threads(6);	
 #pragma omp parallel for 
 	for (int prefix = 0; prefix < (1 << prefixLength); prefix++) {
 		u64 pattern = prefix;

@@ -1,20 +1,12 @@
 #pragma once
-#include<vector>
-#include<set>
-#include<algorithm>
-#include <immintrin.h>
-//#include<zmmintrin.h>
-#include<map>
-#include<fstream>
-#include<iostream>
-using namespace std;
+#include"CommonUtils.hpp"
+
 #define LROT32(x,s)  (((x)<<s)|((x)>>(32-s)))
 #define RROT32(x,s)  (((x)>>s)|((x)<<(32-s)))
 #define LROT64(x,s)  (((x)<<s)|((x)>>(64-s)))
 #define RROT64(x,s)  (((x)>>s)|((x)<<(64-s)))
 #define STATE_LENGTH 64
 
-#define bit(x,n)   (((x)>>(n))&1)
 
 
 #define R1MASK 0x7ffff
@@ -24,28 +16,8 @@ using namespace std;
 #define LROT22(x,s) ((((x)<<s)|((x)>>(22-s)))&R2MASK)
 #define LROT21(x,s) ((((x)<<s)|((x)>>(23-s)))&R3MASK)
 
-typedef uint64_t u64;
 
-u64 rand_64()//产生64位随机数
-{
-	static u64 Z[2] = { 0x375201345e7fa379, 0xcde9fe134e8af6b1 ^ (u64(rand()) << 32) ^ rand() };//(rand() << 24) + (rand() << 12) + rand() 0xcde9fb8a
-	u64 temp = Z[1] ^ (Z[1] << 63) ^ (Z[0] >> 1);
-	Z[0] = Z[1];
-	Z[1] = temp;
-	return Z[0];
-}
 
-inline void setBitVal(u64& reg, int bitNo, u64 val) {
-	u64 msk = 1;
-	msk <<= bitNo;
-	if (val != 0) {
-		reg |= msk;
-	}
-	else {
-		msk = ~msk;
-		reg &= msk;
-	}
-}
 class A5_1_S100 {
 public:
 
@@ -75,15 +47,13 @@ public:
 		a2 = bit(R2, 10);
 		a3 = bit(R3, 10);
 		u64 mVal = maj(a1, a2, a3);
-		return getCurrentMaj();
+		return mVal;
 	}
 	inline u64 getCurrentZ() {
 		return (bit(R1, 18) ^ bit(R2, 21) ^ bit(R3, 22));
 	}
 
-	inline u64 maj(u64 a, u64 b, u64 c) {
-		return ((a&b)^(b&c)^(a&c));
-	}
+	
 
 	inline void clockStopGo() {
 		u64 a1, a2, a3;
@@ -121,53 +91,163 @@ private:
 };
 
 
-class KnownBitsDeduction {
-public:
-	u64 prefix;
-	int prefixLength;
-	int totalSteps;
-	KnownBitsDeduction(u64 prfx = 0, int prfxL = 0, int stps = 1) {
-		totalSteps = stps;
-		prefix = prfx;
-		prefixLength = prfxL;
-	}
-
-private:
-	map<u64, set<u64>> collector;
-};
 
 class Deductor {
-	u64 prefix;
-	u64 initState;
-	int haveDoneSteps;
-	u64 knownBitMask;
-	
-	Deductor(u64 stat, int stp, u64 msk, u64 pfx) {
-		prefix = pfx;
-		initState = stat;
-		haveDoneSteps = stp;
-		knownBitMask = msk;
+public:
+
+	Deductor(MaskAndClock mc,  int stp) {
+		haveUsed = false;
+		currentStep = 0;
+		MaskClockParcer parcer(mc);
+		initMC = mc;
+		initState = 0;
+		for (int i = 0; i < 64; ++i) {
+			if (mc[64 + i] == 1) { 
+				knownBitPositions.insert(i); 
+			}
+			if (mc[i] == 1)setBitVal(initState, i, 1);
+		}
 		bitPositions= vector<vector<int>>(3, vector<int>());
 		for (int i = 0; i < 64; ++i) {
 			if (i < 19)bitPositions[0].push_back(i);
 			else if (i >= 19 && i < (19 + 22))bitPositions[1].push_back(i);
 			else bitPositions[2].push_back(i);
 		}
-		knownBitPositions = getKnownBits();
-		checkRunner=A5_1_S100(initState);
-		bool checkKnownSteps = true;
-		for (int i = 0; i < haveDoneSteps; ++i) {
-			checkKnownSteps= doKnownStep();
+		clockBitInR = { {} ,{} ,{} };
+		clockBitPositions = {};
+		countR1 = 8;
+		countR2 = 10;
+		countR3 = 10;
+		checkRunner=A5_1_S100(initState);		
+		for (currentStep = 0; currentStep < stp; ++currentStep) {
+			if (!doKnownStep())
+				cout << "Step "<<currentStep<<" wrong!" << endl;;
 		}
 	}
+	
+	MaskClockSet getCollector() {
+		if (!haveUsed) {
+			doUnknownStep();
+		}
+		return collector;
+	}
+
+	string getClockValue() {
+		string output = "";
+		for (set<int>::iterator ite = clockBitPositions.begin(); ite != clockBitPositions.end(); ++ite) {
+			output += initMC[*ite]?"1":"0";
+		}
+		return output;
+	}
+
+	string getReportLine() {
+		string line = "";
+		line += getClockBitPositions();
+		line += ";";
+		line += getRiPositions();
+		line += ";";
+		line += getClockValue();
+		line += ";";
+		line += getKnownBitPositions();
+		line += ";";
+		line += getNonClockBitPositions();
+		line += ";";
+		//clock bit length
+		line += to_string(clockBitPositions.size());
+		line += ";";
+		//non-clock bit length
+		line += to_string(knownBitPositions.size()-clockBitPositions.size());
+		line += ";";
+		//total bit length
+		line += to_string(knownBitPositions.size());
+		line += ";";
+		return line;
+	}
+
+	string getRiPositions() {
+		string output = "";
+		for (int i = 0; i < 3; ++i) {
+			output += getRiBits(i);
+			if(i!=2)output += ";";
+		}
+		return output;
+	}
+
+	string getClockBitPositions() {
+		string output = "|";
+		for (set<int>::iterator ite = clockBitPositions.begin(); ite != clockBitPositions.end(); ++ite) {
+			output += to_string(*ite);
+			output += "|";
+		}
+		return output;
+	}
+
+	string getKnownBitPositions() {
+		string output = "|";
+		for (set<int>::iterator ite = knownBitPositions.begin(); ite != knownBitPositions.end(); ++ite) {
+			output += to_string(*ite);
+			output += "|";
+		}
+		return output;
+	}
+
+	string getNonClockBitPositions() {
+		string output = "|";
+		for (set<int>::iterator ite = knownBitPositions.begin(); ite != knownBitPositions.end(); ++ite) {
+			if (clockBitPositions.find(*ite) != clockBitPositions.end()) {
+				output += to_string(*ite);
+				output += "|";
+			}
+		}
+		return output;
+	}
+
+
+
+private:
+	u64 initState;
+	int currentStep;
+	bool haveUsed;
+
+	set<int> knownBitPositions;
+	vector<vector<int>> bitPositions;
+	MaskAndClock initMC;
+	MaskClockSet collector;
+	A5_1_S100 checkRunner;
+	vector<vector<int>> clockBitInR;
+	set<int> clockBitPositions;
+	int countR1, countR2, countR3;
+
+	string getRiBits(int index) {
+		string output = "|";
+		for (int j = 0; j < clockBitInR[index].size(); ++j) {
+			output += to_string(clockBitInR[index][j]);
+			output += "|";
+		}
+		return output;
+	}
+
+
 	bool doKnownStep() {
 		bool ok = true;
 		if (knownBitPositions.find(bitPositions[0][8]) == knownBitPositions.end()
 			|| knownBitPositions.find(bitPositions[1][10]) == knownBitPositions.end()
 			|| knownBitPositions.find(bitPositions[2][10]) == knownBitPositions.end()
-		) {
+		) {		
 			cout << "There is unknown bits in stop_go positions!\n";
 			ok = false;
+		}
+		if (clockBitPositions.find(bitPositions[0][8]) == clockBitPositions.end()) {
+			clockBitPositions.insert(bitPositions[0][8]);
+			clockBitInR[0].push_back(countR1--);
+		}
+		if (clockBitPositions.find(bitPositions[1][10]) == clockBitPositions.end()) {
+			clockBitPositions.insert(bitPositions[1][10]);
+			clockBitInR[1].push_back(countR2--);
+		}
+		if (clockBitPositions.find(bitPositions[2][10]) == clockBitPositions.end()) {
+			clockBitPositions.insert(bitPositions[2][10]);
+			clockBitInR[2].push_back(countR3--);
 		}
 		u64 majVal = checkRunner.getCurrentMaj();
 		u64 a1 = bit(checkRunner.R1, 8);
@@ -201,41 +281,47 @@ class Deductor {
 	}
 
 	void doUnknownStep() {
-		u64 newMask = knownBitMask;
 		vector<int> counterBits;
 		if (knownBitPositions.find(bitPositions[0][8]) == knownBitPositions.end()) {
 			counterBits.push_back(bitPositions[0][8]);
-			setBitVal(newMask, bitPositions[0][8], 1);
 			knownBitPositions.insert(bitPositions[0][8]);
+			initMC[64 + bitPositions[0][8]] = 1;
 		}
 		if (knownBitPositions.find(bitPositions[1][10]) == knownBitPositions.end()) {
 			counterBits.push_back(bitPositions[1][10]);
-			setBitVal(newMask, bitPositions[1][10], 1);
 			knownBitPositions.insert(bitPositions[1][10]);
+			initMC[64 + bitPositions[1][10]] = 1;
 		}
 		if (knownBitPositions.find(bitPositions[2][10]) == knownBitPositions.end()) {
 			counterBits.push_back(bitPositions[2][10]);
-			setBitVal(newMask, bitPositions[2][10],1);
 			knownBitPositions.insert(bitPositions[2][10]);
+			initMC[64+bitPositions[2][10]] = 1;
 		}
 		u64 total = 1;
 		total <<= counterBits.size();
 		for (u64 count = 0; count < total; ++count) {
+			MaskAndClock tmpInitMC = initMC;
 			u64 tmpInitState = initState;
 			for (int btNo = 0; btNo < counterBits.size(); ++btNo) {
 				setBitVal(tmpInitState, counterBits[btNo], bit(count, btNo));
+				tmpInitMC[64 + counterBits[btNo]] = 1;
+				tmpInitMC[counterBits[btNo]] = bit(count,btNo);
 			}
+			u64 a1, a2, a3;
+			a1 = bit(tmpInitState, bitPositions[0][8]);
+			a2 = bit(tmpInitState, bitPositions[1][10]);
+			a3 = bit(tmpInitState, bitPositions[2][10]);
+			u64 mVal = maj(a1, a2, a3);
+			tmpInitMC[64 + bitPositions[0][a1 != mVal ? 18 : 17]] = 1;
+			tmpInitMC[64 + bitPositions[1][a2 != mVal ? 21 : 20]] = 1;
+			tmpInitMC[64 + bitPositions[2][a3 != mVal ? 22 : 21]] = 1;
+			collector.insert(tmpInitMC);
 		}
 		
 		
 	}
 
 
-
-private:
-	set<int> knownBitPositions;
-	vector<vector<int>> bitPositions;
-	A5_1_S100 checkRunner;
 	void rotateR1() {
 		for (int i = 18; i >0; --i) {
 			bitPositions[0][i] = bitPositions[0][i - 1];
@@ -243,28 +329,72 @@ private:
 		bitPositions[0][0] = -1;
 	}
 	void rotateR2() {
-		for (int i = 22; i > 0; --i) {
+		for (int i = 21; i > 0; --i) {
 			bitPositions[1][i] = bitPositions[1][i - 1];
 		}
 		bitPositions[1][0] = -1;
 	}
 	void rotateR3() {
-		for (int i = 23; i > 0; --i) {
+		for (int i = 22; i > 0; --i) {
 			bitPositions[2][i] = bitPositions[2][i - 1];
 		}
 		bitPositions[2][0] = -1;
 	}
+};
 
 
 
-
-	set<int> getKnownBits() {
-		set<int> knownBits;
-		for (int i = 0; i < STATE_LENGTH; ++i) {
-			if(bit(knownBitMask,i)==1)knownBits.insert(i);
+class KnownBitsDeduction {
+public:
+	int totalSteps;
+	int currentStep;
+	KnownBitsDeduction(int stps = 1) {
+		totalSteps = stps;
+		currentStep = 0;
+		collector.clear();
+		while (currentStep < totalSteps) {
+			cout << "Do Step " << currentStep << ":\n";
+			updateCollector();
+			cout << "Acquire " << collector.size() 
+				<< " vectors corresponding to prefix=z[0-"<<(currentStep-1)<<"]\n";
 		}
-		return knownBits;
 	}
+
+	void outputTable(ostream & o) {
+		string header = "clkPos;r1Pos;r2Pos;r3Pos;clkVal;knownPos;nclkPos;#clk;#nclk;#total;\n";
+		for (MaskClockSet::iterator ite = collector.begin(); ite != collector.end(); ++ite) {
+			Deductor ddct(*ite, totalSteps);
+			o << ddct.getReportLine() << "\n";
+		}
+	}
+
+private:
+
+	MaskClockSet collector;
+
+
+	void updateCollector() {
+		if (collector.empty()) {
+			MaskAndClock mc;
+			Deductor ddct = Deductor(mc, 0);
+			collector = ddct.getCollector();
+			currentStep++;
+		}
+		else {
+			MaskClockSet newCollector;
+			for (MaskClockSet::iterator ite = collector.begin(); ite != collector.end(); ++ite) {
+				Deductor one(*ite, currentStep);
+				MaskClockSet msk = one.getCollector();
+				for (MaskClockSet::iterator nite = msk.begin(); nite != msk.end(); ++nite) {
+					newCollector.insert(*nite);
+				}
+			}
+			collector = newCollector;
+			currentStep++;
+		}
+	}
+
+
 };
 
 
