@@ -1,12 +1,52 @@
-#include"A5_1.hpp"
 #include<string>
 #include<omp.h>
 #include<cstring>
+#define TEST 0
+#define MERGE 0
+#define GEN_GUESS_TABLE 0
+#define PRACTICAL_ATTACK 1
 
-#define TEST 1
-#define MERGE (1-TEST)
+#if GEN_GUESS_TABLE
+#include"A5_1.hpp"
+#elif PRACTICAL_ATTACK
+#include"PracticalAttack.hpp"
+#endif
 
-#if TEST
+
+#if PRACTICAL_ATTACK
+int main() {
+
+	long dimension = 10;
+	PracticalAttack attack=PracticalAttack(dimension);
+	vec_GF2 x,b;
+	GF2 d;
+	b.SetLength(dimension);
+	mat_GF2 A = ident_mat_GF2(dimension);
+	mat_GF2 B;
+	B.SetDims(dimension, dimension + 1);
+	for (int i = 0; i < dimension; ++i) {
+		B[i][i] = 1;
+	}
+	B[0][0] = 0;
+	B[0][dimension] = 1;
+	for (int i = 0; i < dimension; ++i) {
+		for (int j = 0; j < dimension; ++j) {
+			A[i][j] = B[i][j];
+		}
+	}
+
+	long orderB = gauss(B);
+	long orderA = gauss(A);
+	cout << orderA << endl;
+	cout << orderB << endl;
+
+
+	return 0;
+}
+
+#endif
+
+#if GEN_GUESS_TABLE
 
 int main() {
 	int bitNumber = 5;
@@ -78,7 +118,7 @@ int main(int argc, char const* argv[]) {
 		set<u64> Lz0_z4;
 		vector<u64> patternBits;
 		for (int i = 0; i < prefixLength; ++i) {
-			patternBits.push_back(bit(pattern, i));
+			patternBits.push_back(bit64(pattern, i));
 		}
 		A5_1_S100 runner(0);
 		u64 iniState = 0;
@@ -87,7 +127,7 @@ int main(int argc, char const* argv[]) {
 			iniState = 0;
 			satisfyPattern = true;
 			for (int loop = 0; loop < involvedBits.size(); ++loop) {
-				setBitVal(iniState, involvedBits[loop], bit(count, loop));
+				setBitVal(iniState, involvedBits[loop], bit64(count, loop));
 			}
 			runner.update(iniState);
 			for (int i = 0; i < prefixLength; ++i) {

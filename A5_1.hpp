@@ -1,6 +1,6 @@
 #pragma once
 #include"CommonUtils.hpp"
-
+using namespace std;
 #define LROT32(x,s)  (((x)<<s)|((x)>>(32-s)))
 #define RROT32(x,s)  (((x)>>s)|((x)<<(32-s)))
 #define LROT64(x,s)  (((x)<<s)|((x)>>(64-s)))
@@ -36,30 +36,30 @@ public:
 
 	inline u64 output() {
 		clockStopGo();
-		return (bit(R1,18) ^ bit(R2,21)^bit(R3,22));
+		return (bit64(R1,18) ^ bit64(R2,21)^bit64(R3,22));
 	}
 
 	u64 R1,R2,R3;
 
 	inline u64 getCurrentMaj() {
 		u64 a1, a2, a3;
-		a1 = bit(R1, 8);
-		a2 = bit(R2, 10);
-		a3 = bit(R3, 10);
+		a1 = bit64(R1, 8);
+		a2 = bit64(R2, 10);
+		a3 = bit64(R3, 10);
 		u64 mVal = maj(a1, a2, a3);
 		return mVal;
 	}
 	inline u64 getCurrentZ() {
-		return (bit(R1, 18) ^ bit(R2, 21) ^ bit(R3, 22));
+		return (bit64(R1, 18) ^ bit64(R2, 21) ^ bit64(R3, 22));
 	}
 
 	
 
 	inline void clockStopGo() {
 		u64 a1, a2, a3;
-		a1 = bit(R1, 8);
-		a2 = bit(R2, 10);
-		a3 = bit(R3, 10);
+		a1 = bit64(R1, 8);
+		a2 = bit64(R2, 10);
+		a3 = bit64(R3, 10);
 		u64 mVal = maj(a1, a2, a3);
 		if (a1 == mVal)updateR1();
 		if (a2 == mVal)updateR2();
@@ -67,21 +67,21 @@ public:
 	}
 
 	inline void updateR1() {
-		u64 opt = bit(R1, 18) ^ bit(R1, 17) ^ bit(R1, 16) ^ bit(R1, 13);
+		u64 opt = bit64(R1, 18) ^ bit64(R1, 17) ^ bit64(R1, 16) ^ bit64(R1, 13);
 		R1 <<= 1;
 		R1 &= R1MASK;
 		setBitVal(R1, 0, opt);
 	}
 
 	inline void updateR2() {
-		u64 opt = bit(R2, 21) ^ bit(R2, 20);
+		u64 opt = bit64(R2, 21) ^ bit64(R2, 20);
 		R2 <<= 1;
 		R2 &= R2MASK;
 		setBitVal(R2, 0, opt);
 	}
 
 	inline void updateR3() {
-		u64 opt = bit(R3, 22) ^ bit(R3, 21) ^ bit(R3, 20) ^ bit(R3, 7);
+		u64 opt = bit64(R3, 22) ^ bit64(R3, 21) ^ bit64(R3, 20) ^ bit64(R3, 7);
 		R3 <<= 1;
 		R3 &= R3MASK;
 		setBitVal(R3, 0, opt);
@@ -193,7 +193,7 @@ public:
 
 	string getNonClockBitPositions() {
 		string output = "|";
-		for (set<int>::iterator ite = knownBitPositions.begin(); ite != knownBitPositions.end(); ++ite) {
+		for (std::set<int>::iterator ite = knownBitPositions.begin(); ite != knownBitPositions.end(); ++ite) {
 			if (clockBitPositions.find(*ite) == clockBitPositions.end()) {
 				output += to_string(*ite);
 				output += "|";
@@ -250,9 +250,9 @@ private:
 			clockBitInR[2].push_back(countR3--);
 		}
 		u64 majVal = checkRunner.getCurrentMaj();
-		u64 a1 = bit(checkRunner.R1, 8);
-		u64 a2 = bit(checkRunner.R2, 10);
-		u64 a3 = bit(checkRunner.R3, 10);
+		u64 a1 = bit64(checkRunner.R1, 8);
+		u64 a2 = bit64(checkRunner.R2, 10);
+		u64 a3 = bit64(checkRunner.R3, 10);
 		if (a1 == majVal) {
 			checkRunner.updateR1();
 			rotateR1();
@@ -303,14 +303,14 @@ private:
 			MaskAndClock tmpInitMC = initMC;
 			u64 tmpInitState = initState;
 			for (int btNo = 0; btNo < counterBits.size(); ++btNo) {
-				setBitVal(tmpInitState, counterBits[btNo], bit(count, btNo));
+				setBitVal(tmpInitState, counterBits[btNo], bit64(count, btNo));
 				tmpInitMC[64 + counterBits[btNo]] = 1;
-				tmpInitMC[counterBits[btNo]] = bit(count,btNo);
+				tmpInitMC[counterBits[btNo]] = bit64(count,btNo);
 			}
 			u64 a1, a2, a3;
-			a1 = bit(tmpInitState, bitPositions[0][8]);
-			a2 = bit(tmpInitState, bitPositions[1][10]);
-			a3 = bit(tmpInitState, bitPositions[2][10]);
+			a1 = bit64(tmpInitState, bitPositions[0][8]);
+			a2 = bit64(tmpInitState, bitPositions[1][10]);
+			a3 = bit64(tmpInitState, bitPositions[2][10]);
 			u64 mVal = maj(a1, a2, a3);
 			tmpInitMC[64 + bitPositions[0][a1 != mVal ? 18 : 17]] = 1;
 			tmpInitMC[64 + bitPositions[1][a2 != mVal ? 21 : 20]] = 1;
@@ -399,6 +399,9 @@ private:
 };
 
 
+
+
+
 class A5_1_S100ANF {
 public:
 
@@ -411,15 +414,15 @@ public:
 		R3 = (state >> (41)) & R3MASK;
 	}
 	u64 output(int offset) {
-		u64 x[9] = { bit(R1,18 + offset),
-			bit(R2,21+ offset),
-			bit(R3,22 + offset),
-			bit(R1,17 + offset),
-			bit(R2,20 + offset),
-			bit(R3,21 + offset),
-			bit(R1,8 + offset),
-			bit(R2,10 + offset),
-			bit(R3,10 + offset) };
+		u64 x[9] = { bit64(R1,18 + offset),
+			bit64(R2,21+ offset),
+			bit64(R3,22 + offset),
+			bit64(R1,17 + offset),
+			bit64(R2,20 + offset),
+			bit64(R3,21 + offset),
+			bit64(R1,8 + offset),
+			bit64(R2,10 + offset),
+			bit64(R3,10 + offset) };
 		u64 res = x[3] ^ x[4] ^ x[5] ^ (x[0] & x[6]) ^ (x[3] & x[6]) ^ (x[1] & x[7]) ^ (x[4] & x[7]) ^ (x[2] & x[8]) ^ (x[5] & x[8]) ^ (x[0] & x[6] & x[7])
 			^ (x[1] & x[6] & x[7]) ^ (x[2] & x[6] & x[7]) ^ (x[3] & x[6] & x[7]) ^ (x[4] & x[6] & x[7]) ^ (x[5] & x[6] & x[7]) ^ (x[0] & x[6] & x[8])
 			^ (x[1] & x[6] & x[8]) ^ (x[2] & x[6] & x[8]) ^ (x[3] & x[6] & x[8]) ^ (x[4] & x[6] & x[8]) ^ (x[5] & x[6] & x[8]) ^ (x[0] & x[7] & x[8])

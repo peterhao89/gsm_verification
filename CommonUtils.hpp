@@ -10,7 +10,7 @@
 #include<bitset>
 #include<string>
 
-#define bit(x,n)   (((x)>>(n))&1)
+#define bit64(x,n)   (((x)>>(n))&1)
 using namespace std;
 
 typedef uint64_t u64;
@@ -74,9 +74,9 @@ public:
 	MaskAndClock getMaskAndClock() {
 		MaskAndClock mm;
 		for (int i = 0; i < 64; ++i) {
-			if (bit(mask, i) == 0)mm[64 + i] = 0;
+			if (bit64(mask, i) == 0)mm[64 + i] = 0;
 			else mm[64 + i] = 1;
-			if (bit(clock, i) == 0)mm[i] = 0;
+			if (bit64(clock, i) == 0)mm[i] = 0;
 			else mm[i] = 1;
 		}
 		return mm;
