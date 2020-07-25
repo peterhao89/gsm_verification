@@ -17,28 +17,20 @@
 int main() {
 
 	long dimension = 10;
-	PracticalAttack attack=PracticalAttack(dimension);
 	vec_GF2 x,b;
 	GF2 d;
 	b.SetLength(dimension);
-	mat_GF2 A = ident_mat_GF2(dimension);
 	mat_GF2 B;
-	B.SetDims(dimension, dimension + 1);
+	B.SetDims(dimension+3, dimension + 1);
 	for (int i = 0; i < dimension; ++i) {
-		B[i][i] = 1;
+		B[i+1][i] = 1;
 	}
-	B[0][0] = 0;
-	B[0][dimension] = 1;
-	for (int i = 0; i < dimension; ++i) {
-		for (int j = 0; j < dimension; ++j) {
-			A[i][j] = B[i][j];
-		}
-	}
+	B[1][dimension] = 1;
+	cout << B << endl;
 
 	long orderB = gauss(B);
-	long orderA = gauss(A);
-	cout << orderA << endl;
 	cout << orderB << endl;
+	cout << B << endl;
 
 
 	return 0;

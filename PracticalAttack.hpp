@@ -133,7 +133,6 @@ public:
 		eqMatExtend.SetDims(eqCap, A5_1_STATE_SIZE + 1);
 		stateTrack = InternalStateEquations();
 		eqCapacity = eqCap;
-
 	}
 	mat_GF2 eqMat, eqMatExtend;
 	InternalStateEquations stateTrack;
@@ -171,6 +170,7 @@ public:
 		}
 	}
 
+	//lhEq: the Matrix A in Ax=b
 	// rhs: 0 eq; 1 ueq
 	void setOneEquation(u64 lhEq, u64 rhs) {
 		for (int bitNo = 0; bitNo < A5_1_STATE_SIZE; ++bitNo) {
@@ -179,7 +179,7 @@ public:
 				eqMatExtend[eqNumber][bitNo] = 1;
 			}
 		}
-		if (rhs)eqMatExtend[eqNumber][dimension] = 1;
+		if (rhs)eqMatExtend[eqNumber][A5_1_STATE_SIZE] = 1;
 		++eqNumber;
 	}
 
@@ -208,12 +208,9 @@ public:
 			setOneEquation(clkBitAnfs[0] ^ clkBitAnfs[2], 1);
 			break;
 		}
-
-
 		stateTrack.doOneStep(oneMoveMask);
 		u64 outputEq = stateTrack.getOutputEquation();
 		setOneEquation(outputEq, prefixBit);
-
 	}
 
 
