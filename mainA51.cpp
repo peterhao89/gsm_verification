@@ -73,39 +73,21 @@ int main() {
 		//Currect guess
 		//attack.doOneMove(orderCheckRunnter.getLastMoveMask(), orderCheckRunnter.getCurrentZ());
 		//Incorrect guess
-		attack.doOneMove(rand_64()&0x3, orderCheckRunnter.getCurrentZ());
-		++currentHaveDoneStep;
+		u64 wrongMove;
+		do {
+			wrongMove = rand_64() & 0x3;
+		} while (wrongMove!= orderCheckRunnter.getLastMoveMask());
+		attack.doOneMove(wrongMove, orderCheckRunnter.getCurrentZ());
+		++currentHaveDoneStep;		
+		bool passCurrent = attack.isFeasible();
 		cout << "MatOrder: " << attack.matOrder << endl;
-		if (!attack.isFeasible()) {
+		if (!passCurrent) {
 			cout << "Current step infeasible!\n";
 			cout << "Have passed " << currentHaveDoneStep << " steps in total!\n";
 			break;
 		}		
 	} while (attack.matOrder != 64 && currentHaveDoneStep<32);
 	cout << currentHaveDoneStep << " steps in total!\n";
-	/*
-	attack.constructEquations(runner.getHaveDoneMoveMask(), prefix, targetSteps);
-	if (attack.isFeasible()) {
-		cout << "Success!\n";
-	}*/
-
-	/*
-	long dimension = 10;
-	vec_GF2 x,b;
-	GF2 d;
-	b.SetLength(dimension);
-	mat_GF2 B;
-	B.SetDims(dimension+3, dimension + 1);
-	for (int i = 0; i < dimension; ++i) {
-		B[i+1][i] = 1;
-	}
-	B[1][dimension] = 1;
-	cout << B << endl;
-
-	long orderB = gauss(B);
-	cout << orderB << endl;
-	cout << B << endl;
-	*/
 
 	return 0;
 }
