@@ -7,15 +7,89 @@
 #define PRACTICAL_ATTACK 1
 
 #if GEN_GUESS_TABLE
-#include"A5_1.hpp"
+#include"GuessDetermineCP.hpp"
 #elif PRACTICAL_ATTACK
+#include"A51Impl.hpp"
 #include"PracticalAttack.hpp"
 #endif
 
 
 #if PRACTICAL_ATTACK
-int main() {
 
+u64 sum64(u64 vec) {
+	u64 summation = 0;
+	for (int i = 0; i < 64; ++i)
+		summation ^= bit64(vec, i);
+	return summation;
+}
+
+
+
+int main() {
+	srand(time(NULL));
+	int targetSteps = 23;
+	u64 initState = rand_64();
+	A5_1_S100 runner(initState);
+	vector<u64> trackZ;
+	for (int r = 0; r < targetSteps; ++r) {
+		cout << "R1[8]:" << runner.getRiBit(1, 8) << endl;
+		cout << "R2[10]:" << runner.getRiBit(2, 10) << endl;
+		cout << "R3[10]:" << runner.getRiBit(3, 10) << endl;
+		runner.doOneStep();
+		cout << "Last Move Mask=" << runner.getLastMoveMask() << endl;
+		cout << "z" << r <<"="<< runner.getCurrentZ()<< endl;
+		trackZ.push_back(runner.getCurrentZ());
+	}
+	u64 prefix = runner.getPrefix();
+	for (int i = 0; i < trackZ.size(); ++i) {
+		cout << (trackZ[i] ^ bit64(prefix, i)) << ",";
+	}
+	cout << endl;
+
+	A5_1_S100 eqCheckRunner(initState);
+	InternalStateEquations stateEq=InternalStateEquations();
+	
+	
+	for (int r = 0; r < targetSteps; ++r) {
+		eqCheckRunner.doOneStep();
+		stateEq.doOneStep(eqCheckRunner.getOneStepMoveMask(r));
+		u64 currentWholeState = eqCheckRunner.getWholeState();
+		for (int bitNo = 0; bitNo < 64; ++bitNo) {
+			if (sum64(stateEq.currentState[bitNo] & initState) != bit64(currentWholeState, bitNo)) {
+				cout << "Fail step " << r << " at bitNo " << bitNo << endl;
+			}
+		}
+		if (sum64(stateEq.getOutputEquation() & initState) != eqCheckRunner.getCurrentZ()) {
+			cout << "Fail step " << r << " at output\n";
+		}
+	}
+
+	int currentHaveDoneStep = 0;
+	PracticalAttack attack = PracticalAttack();
+	A5_1_S100 orderCheckRunnter(initState);
+	do {
+		cout << "Step " << currentHaveDoneStep << endl;
+		orderCheckRunnter.doOneStep();
+		//Currect guess
+		//attack.doOneMove(orderCheckRunnter.getLastMoveMask(), orderCheckRunnter.getCurrentZ());
+		//Incorrect guess
+		attack.doOneMove(rand_64()&0x3, orderCheckRunnter.getCurrentZ());
+		++currentHaveDoneStep;
+		cout << "MatOrder: " << attack.matOrder << endl;
+		if (!attack.isFeasible()) {
+			cout << "Current step infeasible!\n";
+			cout << "Have passed " << currentHaveDoneStep << " steps in total!\n";
+			break;
+		}		
+	} while (attack.matOrder != 64 && currentHaveDoneStep<32);
+	cout << currentHaveDoneStep << " steps in total!\n";
+	/*
+	attack.constructEquations(runner.getHaveDoneMoveMask(), prefix, targetSteps);
+	if (attack.isFeasible()) {
+		cout << "Success!\n";
+	}*/
+
+	/*
 	long dimension = 10;
 	vec_GF2 x,b;
 	GF2 d;
@@ -31,7 +105,7 @@ int main() {
 	long orderB = gauss(B);
 	cout << orderB << endl;
 	cout << B << endl;
-
+	*/
 
 	return 0;
 }

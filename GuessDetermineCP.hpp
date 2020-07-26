@@ -1,113 +1,24 @@
 #pragma once
 #include"CommonUtils.hpp"
+#include"A51Impl.hpp"
 using namespace std;
-#define LROT32(x,s)  (((x)<<s)|((x)>>(32-s)))
-#define RROT32(x,s)  (((x)>>s)|((x)<<(32-s)))
-#define LROT64(x,s)  (((x)<<s)|((x)>>(64-s)))
-#define RROT64(x,s)  (((x)>>s)|((x)<<(64-s)))
-#define STATE_LENGTH 64
-
-
-
-#define R1MASK 0x7ffff
-#define R2MASK 0x3fffff
-#define R3MASK 0x7fffff
-#define LROT19(x,s) ((((x)<<s)|((x)>>(19-s)))&R1MASK)
-#define LROT22(x,s) ((((x)<<s)|((x)>>(22-s)))&R2MASK)
-#define LROT21(x,s) ((((x)<<s)|((x)>>(23-s)))&R3MASK)
-
-
-
-class A5_1_S100 {
-public:
-
-	A5_1_S100(uint64_t state=0) {
-		update(state);
-	}
-
-	inline void update(u64 state ) {
-		R1 = state & R1MASK;
-		R2 = (state >> 19) & R2MASK;
-		R3 = (state >> (41)) & R3MASK;
-	}
-	inline u64 getWholeState() {
-		return (R1 | (R2 << 19) | (R3 << 41));
-	}
-
-	inline u64 output() {
-		clockStopGo();
-		return (bit64(R1,18) ^ bit64(R2,21)^bit64(R3,22));
-	}
-
-	u64 R1,R2,R3;
-
-	inline u64 getCurrentMaj() {
-		u64 a1, a2, a3;
-		a1 = bit64(R1, 8);
-		a2 = bit64(R2, 10);
-		a3 = bit64(R3, 10);
-		u64 mVal = maj(a1, a2, a3);
-		return mVal;
-	}
-	inline u64 getCurrentZ() {
-		return (bit64(R1, 18) ^ bit64(R2, 21) ^ bit64(R3, 22));
-	}
-
-	
-
-	inline void clockStopGo() {
-		u64 a1, a2, a3;
-		a1 = bit64(R1, 8);
-		a2 = bit64(R2, 10);
-		a3 = bit64(R3, 10);
-		u64 mVal = maj(a1, a2, a3);
-		if (a1 == mVal)updateR1();
-		if (a2 == mVal)updateR2();
-		if (a3 == mVal)updateR3();
-	}
-
-	inline void updateR1() {
-		u64 opt = bit64(R1, 18) ^ bit64(R1, 17) ^ bit64(R1, 16) ^ bit64(R1, 13);
-		R1 <<= 1;
-		R1 &= R1MASK;
-		setBitVal(R1, 0, opt);
-	}
-
-	inline void updateR2() {
-		u64 opt = bit64(R2, 21) ^ bit64(R2, 20);
-		R2 <<= 1;
-		R2 &= R2MASK;
-		setBitVal(R2, 0, opt);
-	}
-
-	inline void updateR3() {
-		u64 opt = bit64(R3, 22) ^ bit64(R3, 21) ^ bit64(R3, 20) ^ bit64(R3, 7);
-		R3 <<= 1;
-		R3 &= R3MASK;
-		setBitVal(R3, 0, opt);
-	}
-
-private:
-};
-
-
 
 class Deductor {
 public:
 
-	Deductor(MaskAndClock mc,  int stp) {
+	Deductor(MaskAndClock mc, int stp) {
 		haveUsed = false;
 		currentStep = 0;
 		MaskClockParcer parcer(mc);
 		initMC = mc;
 		initState = 0;
 		for (int i = 0; i < 64; ++i) {
-			if (mc[64 + i] == 1) { 
-				knownBitPositions.insert(i); 
+			if (mc[64 + i] == 1) {
+				knownBitPositions.insert(i);
 			}
 			if (mc[i] == 1)setBitVal(initState, i, 1);
 		}
-		bitPositions= vector<vector<int>>(3, vector<int>());
+		bitPositions = vector<vector<int>>(3, vector<int>());
 		for (int i = 0; i < 64; ++i) {
 			if (i < 19)bitPositions[0].push_back(i);
 			else if (i >= 19 && i < (19 + 22))bitPositions[1].push_back(i);
@@ -118,13 +29,13 @@ public:
 		countR1 = 8;
 		countR2 = 10;
 		countR3 = 10;
-		checkRunner=A5_1_S100(initState);		
+		checkRunner = A5_1_S100(initState);
 		for (currentStep = 0; currentStep < stp; ++currentStep) {
 			if (!doKnownStep())
-				cout << "Step "<<currentStep<<" wrong!" << endl;;
+				cout << "Step " << currentStep << " wrong!" << endl;;
 		}
 	}
-	
+
 	MaskClockSet getCollector() {
 		if (!haveUsed) {
 			doUnknownStep();
@@ -135,7 +46,7 @@ public:
 	string getClockValue() {
 		string output = "|";
 		for (set<int>::iterator ite = clockBitPositions.begin(); ite != clockBitPositions.end(); ++ite) {
-			output += initMC[*ite]?"1|":"0|";
+			output += initMC[*ite] ? "1|" : "0|";
 		}
 		return output;
 	}
@@ -156,7 +67,7 @@ public:
 		line += to_string(clockBitPositions.size());
 		line += ";";
 		//non-clock bit length
-		line += to_string(knownBitPositions.size()-clockBitPositions.size());
+		line += to_string(knownBitPositions.size() - clockBitPositions.size());
 		line += ";";
 		//total bit length
 		line += to_string(knownBitPositions.size());
@@ -168,7 +79,7 @@ public:
 		string output = "";
 		for (int i = 0; i < 3; ++i) {
 			output += getRiBits(i);
-			if(i!=2)output += ";";
+			if (i != 2)output += ";";
 		}
 		return output;
 	}
@@ -233,7 +144,7 @@ private:
 		if (knownBitPositions.find(bitPositions[0][8]) == knownBitPositions.end()
 			|| knownBitPositions.find(bitPositions[1][10]) == knownBitPositions.end()
 			|| knownBitPositions.find(bitPositions[2][10]) == knownBitPositions.end()
-		) {		
+			) {
 			cout << "There is unknown bits in stop_go positions!\n";
 			ok = false;
 		}
@@ -250,11 +161,15 @@ private:
 			clockBitInR[2].push_back(countR3--);
 		}
 		u64 majVal = checkRunner.getCurrentMaj();
-		u64 a1 = bit64(checkRunner.R1, 8);
-		u64 a2 = bit64(checkRunner.R2, 10);
-		u64 a3 = bit64(checkRunner.R3, 10);
+		u64 a1 = checkRunner.getRiBit(1, 8);
+			//bit64(checkRunner.R1, 8);
+		u64 a2 = checkRunner.getRiBit(2, 10); 
+			//bit64(checkRunner.R2, 10);
+		u64 a3 = checkRunner.getRiBit(3, 10);
+			//bit64(checkRunner.R3, 10);
+		checkRunner.doOneStep();
 		if (a1 == majVal) {
-			checkRunner.updateR1();
+			//checkRunner.updateR1();
 			rotateR1();
 			if (knownBitPositions.find(bitPositions[0][18]) == knownBitPositions.end()) {
 				cout << "R1 position is unknown!\n";
@@ -262,7 +177,7 @@ private:
 			}
 		}
 		if (a2 == majVal) {
-			checkRunner.updateR2();
+			//checkRunner.updateR2();
 			rotateR2();
 			if (knownBitPositions.find(bitPositions[1][21]) == knownBitPositions.end()) {
 				cout << "R2 position is unknown!\n";
@@ -270,7 +185,7 @@ private:
 			}
 		}
 		if (a3 == majVal) {
-			checkRunner.updateR3();
+			//checkRunner.updateR3();
 			rotateR3();
 			if (knownBitPositions.find(bitPositions[2][22]) == knownBitPositions.end()) {
 				cout << "R3 position is unknown!\n";
@@ -295,7 +210,7 @@ private:
 		if (knownBitPositions.find(bitPositions[2][10]) == knownBitPositions.end()) {
 			counterBits.push_back(bitPositions[2][10]);
 			knownBitPositions.insert(bitPositions[2][10]);
-			initMC[64+bitPositions[2][10]] = 1;
+			initMC[64 + bitPositions[2][10]] = 1;
 		}
 		u64 total = 1;
 		total <<= counterBits.size();
@@ -305,7 +220,7 @@ private:
 			for (int btNo = 0; btNo < counterBits.size(); ++btNo) {
 				setBitVal(tmpInitState, counterBits[btNo], bit64(count, btNo));
 				tmpInitMC[64 + counterBits[btNo]] = 1;
-				tmpInitMC[counterBits[btNo]] = bit64(count,btNo);
+				tmpInitMC[counterBits[btNo]] = bit64(count, btNo);
 			}
 			u64 a1, a2, a3;
 			a1 = bit64(tmpInitState, bitPositions[0][8]);
@@ -317,13 +232,13 @@ private:
 			tmpInitMC[64 + bitPositions[2][a3 != mVal ? 22 : 21]] = 1;
 			collector.insert(tmpInitMC);
 		}
-		
-		
+
+
 	}
 
 
 	void rotateR1() {
-		for (int i = 18; i >0; --i) {
+		for (int i = 18; i > 0; --i) {
 			bitPositions[0][i] = bitPositions[0][i - 1];
 		}
 		bitPositions[0][0] = -1;
@@ -355,12 +270,12 @@ public:
 		while (currentStep < totalSteps) {
 			cout << "Do Step " << currentStep << ":\n";
 			updateCollector();
-			cout << "Acquire " << collector.size() 
-				<< " vectors corresponding to prefix=z[0-"<<(currentStep-1)<<"]\n";
+			cout << "Acquire " << collector.size()
+				<< " vectors corresponding to prefix=z[0-" << (currentStep - 1) << "]\n";
 		}
 	}
 
-	void outputTable(ostream & o) {
+	void outputTable(ostream& o) {
 		string header = "clkPos;r1Pos;r2Pos;r3Pos;clkVal;knownPos;nclkPos;#clk;#nclk;#total;\n";
 		o << header;
 		for (MaskClockSet::iterator ite = collector.begin(); ite != collector.end(); ++ite) {
@@ -399,38 +314,3 @@ private:
 };
 
 
-
-
-
-class A5_1_S100ANF {
-public:
-
-	A5_1_S100ANF(uint64_t state = 0) {
-		update(state);
-	}
-	void update(u64 state ) {
-		R1 = state & R1MASK;
-		R2 = (state >> 19) & R2MASK;
-		R3 = (state >> (41)) & R3MASK;
-	}
-	u64 output(int offset) {
-		u64 x[9] = { bit64(R1,18 + offset),
-			bit64(R2,21+ offset),
-			bit64(R3,22 + offset),
-			bit64(R1,17 + offset),
-			bit64(R2,20 + offset),
-			bit64(R3,21 + offset),
-			bit64(R1,8 + offset),
-			bit64(R2,10 + offset),
-			bit64(R3,10 + offset) };
-		u64 res = x[3] ^ x[4] ^ x[5] ^ (x[0] & x[6]) ^ (x[3] & x[6]) ^ (x[1] & x[7]) ^ (x[4] & x[7]) ^ (x[2] & x[8]) ^ (x[5] & x[8]) ^ (x[0] & x[6] & x[7])
-			^ (x[1] & x[6] & x[7]) ^ (x[2] & x[6] & x[7]) ^ (x[3] & x[6] & x[7]) ^ (x[4] & x[6] & x[7]) ^ (x[5] & x[6] & x[7]) ^ (x[0] & x[6] & x[8])
-			^ (x[1] & x[6] & x[8]) ^ (x[2] & x[6] & x[8]) ^ (x[3] & x[6] & x[8]) ^ (x[4] & x[6] & x[8]) ^ (x[5] & x[6] & x[8]) ^ (x[0] & x[7] & x[8])
-			^ (x[1] & x[7] & x[8]) ^ (x[2] & x[7] & x[8]) ^ (x[3] & x[7] & x[8]) ^ (x[4] & x[7] & x[8]) ^ (x[5] & x[7] & x[8]);
-		return res;
-	}
-
-
-private:
-	u64 R1, R2, R3;
-};

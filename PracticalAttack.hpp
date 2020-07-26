@@ -127,17 +127,19 @@ public:
 
 class PracticalAttack {
 public:
-	PracticalAttack(long eqCap = 66) {
+	PracticalAttack(long eqCap = 96) {
 		eqNumber = 0;
 		eqMat.SetDims(eqCap, A5_1_STATE_SIZE + 1);
 		eqMatExtend.SetDims(eqCap, A5_1_STATE_SIZE + 1);
 		stateTrack = InternalStateEquations();
 		eqCapacity = eqCap;
+		matOrder = 0;
 	}
 	mat_GF2 eqMat, eqMatExtend;
 	InternalStateEquations stateTrack;
 	int eqNumber;
 	long eqCapacity;
+	long matOrder;
 
 
 	u64 getSolution() {
@@ -161,7 +163,13 @@ public:
 	}
 
 	bool isFeasible() {
-		return (gauss(eqMat)==gauss(eqMatExtend));
+		long orderMat = gauss(eqMat);
+		long orderMatExt = gauss(eqMatExtend);
+		if (orderMat == orderMatExt) {
+			matOrder = orderMat;
+			return true;
+		}
+		else return false;
 	}
 
 	void constructEquations(u64 moves, u64 prefix, int moveNumber) {
@@ -216,5 +224,49 @@ public:
 
 
 
+
+};
+
+enum NodeStatus {
+	SUCCESS, 
+	BREED,
+	GUESS, 
+	BACKTRACK,
+	NEWBORN
+};
+
+class GuessNode {
+public:
+	GuessNode(GuessNode* pNode=NULL) {
+		parent = pNode;
+		if (parent != NULL) {
+			parent->child = this;
+			haveDoneSteps = parent->haveDoneSteps;
+			haveDoneMoveMask = parent->haveDoneMoveMask;
+			haveDonePrefix = parent->haveDonePrefix;
+		}
+		child = NULL;
+		currentGuess = 0;
+		
+		haveDoneMoveMask = 0;
+		haveDonePrefix = 0;
+		eqMatOrder = 0;
+		stateTrack = InternalStateEquations();
+		currentStatus = NEWBORN;
+		solveA51();
+	}
+	GuessNode* parent;
+	GuessNode* child;
+	u64 currentGuess;
+	int haveDoneSteps;
+	long eqMatOrder;
+	u64 haveDoneMoveMask;
+	u64 haveDonePrefix;
+	InternalStateEquations stateTrack;
+	NodeStatus currentStatus;
+
+	void solveA51() {
+		
+	}
 
 };
