@@ -16,13 +16,61 @@
 
 #if PRACTICAL_ATTACK
 
+
+
+long getRemainedNumberOnce(int round) {
+	u64 initState = rand_64();
+	long once = 0;
+	u64 totalGuess = 1;
+	totalGuess <<= (2 * round);
+	A5_1_S100 runner(initState);
+	vector<u64> trackZ;
+	for (int r = 0; r < round; ++r) {
+		runner.doOneStep();
+	}
+	u64 prefix = runner.getPrefix();
+	u64 haveDoneMoves = runner.getHaveDoneMoveMask();
+	PracticalAttack attack(96);
+	long passedNumber = 0;
+	for (u64 guess = 0; guess < totalGuess; ++guess) {
+		if (guess == haveDoneMoves)continue;
+		attack.constructEquations(guess, prefix, round);
+		if (attack.isFeasible()) {
+			++passedNumber;
+		}
+	}
+	return passedNumber;
+
+
+}
+
+
+int main() {
+	srand(time(NULL));
+	int roundUpper = 16;
+	ofstream file1("RemainedByRound.txt");
+	
+	for (int r = 14; r < roundUpper; ++r) {
+		long rRemain = getRemainedNumberOnce(r);
+		for (int i = 0; i < 2; ++i) {
+			ostream& o  = (i == 0) ? cout : file1;
+			o << dec << "Round " << r << ";" << rRemain << endl;
+		}
+	}
+	file1.close();
+
+
+	return 0;
+}
+
+
+#if TEST_COMPONENTS
 u64 sum64(u64 vec) {
 	u64 summation = 0;
 	for (int i = 0; i < 64; ++i)
 		summation ^= bit64(vec, i);
 	return summation;
 }
-
 
 
 int main() {
@@ -91,7 +139,7 @@ int main() {
 
 	return 0;
 }
-
+#endif
 #endif
 
 #if GEN_GUESS_TABLE
