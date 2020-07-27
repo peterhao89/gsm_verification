@@ -11,7 +11,6 @@
 #include<set>
 #include<algorithm>
 #include <immintrin.h>
-#include<zmmintrin.h>
 #include<fstream>
 #include<omp.h>
 NTL_CLIENT
