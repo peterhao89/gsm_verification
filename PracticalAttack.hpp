@@ -11,7 +11,6 @@
 #include<set>
 #include<algorithm>
 #include <immintrin.h>
-#include<zmmintrin.h>
 #include<fstream>
 #include<omp.h>
 NTL_CLIENT
@@ -132,8 +131,9 @@ public:
 		eqMat.SetDims(eqCap, A5_1_STATE_SIZE + 1);
 		eqMatExtend.SetDims(eqCap, A5_1_STATE_SIZE + 1);
 		stateTrack = InternalStateEquations();
-		eqCapacity = eqCap;
 		matOrder = 0;
+		eqCapacity = eqCap;
+		
 	}
 	mat_GF2 eqMat, eqMatExtend;
 	InternalStateEquations stateTrack;
@@ -173,6 +173,11 @@ public:
 	}
 
 	void constructEquations(u64 moves, u64 prefix, int moveNumber) {
+		eqNumber = 0;
+		eqMat.SetDims(eqCapacity, A5_1_STATE_SIZE + 1);
+		eqMatExtend.SetDims(eqCapacity, A5_1_STATE_SIZE + 1);
+		stateTrack.restart();
+		matOrder = 0;
 		for (int i = 0; i < moveNumber; ++i) {
 			doOneMove((moves >> (2 * i)) & 0x3, bit64(prefix, i));
 		}
