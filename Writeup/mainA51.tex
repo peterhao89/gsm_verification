@@ -1,0 +1,214 @@
+%style input
+\input{style}
+%\usepackage{setspace}
+%\setstretch{2}
+
+        \begin{document}
+% start of an individual contribution
+\mainmatter
+% first the title is needed
+\title{Analyze the Tradeoffs in A5/1 Key-Recovery Attacks}
+%\author{Yonglin Hao\inst{1}}
+%\institute{
+%	State Key Laboratory of Cryptology, P.O. Box 5159, Beijing 100878, China, \email{haoyonglin@yeah.net} \and
+%	Ruhr University Bochum, Horst G{\"o}rtz Institute for IT Security, Germany, \email{gregor.leander@rub.de} \and
+%	FHNW, Windisch, Switzerland, \email{willimeier48@gmail.com} \and
+%	NTT Secure Platform Laboratories, Tokyo 180-8585, Japan, \email{yosuke.todo.xt@hco.ntt.co.jp} \and
+%	SnT, University of Luxembourg, Esch-sur-Alzette, Luxembourg, \email{qingju.wang@uni.lu}}
+\maketitle
+
+
+%\input{introduction_abst}
+
+%\pagewiselinenumbers
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   Abstract   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{abstract}
+We analyze the
+\keywords{stream ciphers, A5/1, guess-and-determine}
+\end{abstract}
+
+\section{Introduction}
+We analyze the attack given by Bin Zhang in \cite{AC:Zhang19} only to find that the complexities given in \cite{AC:Zhang19} are wrong.
+As a remedy, we give detailed analysis to all the possible tradeoffs in the guess-and-determine attacks on A5/1 and give the best practical attack requiring simple $2^{44.60}$ computations and a negligible memory complexity.
+
+
+\section{Preliminary}
+A5/1 has a 64-bit internal state consisting of 3 registers of sizes 19, 22, 23 respectively.
+We denote the 64-bit state at time $t$ ($t=0,1,2,\ldots$) as
+\begin{equation}\label{eq:StateAndRi}
+\begin{split}
+   S^t= & (R1^t, R2^t, R3^t)\\
+     =& (S^t[0,\ldots, 18],S^t[19,\ldots, 40],S^t[41,\ldots, 63])\\
+     =&(R1^t[0,\ldots,18],R2^t[0,\ldots, 21],R3^t[0,\ldots,22])
+\end{split}
+\end{equation}
+Before generating the output bit $z_t$, A5/1 round function will update the internal state $S^t\Rightarrow S^{t+1}$ in a stop-and-go manner as follows:
+\begin{enumerate}
+  \item Compute $maj_t$ as
+\begin{equation}\label{eq:Majt}
+  maj_t=(R1^t[8]\cdot R2^t[10])\oplus (R1^t[8]\cdot R3^t[10])\oplus (R2^t[10]\cdot R3^t[10])
+\end{equation}
+  \item If $R1^t[8]\neq maj_t$, $R1^{t+1}\leftarrow R1^t$, otherwise, call $\tt{updateR1}$ as follows:
+  \begin{equation}\label{eq:UpdateR1}
+    R1^{t+1}[i]\leftarrow\left\{
+    \begin{aligned}
+      &R1^t[i-1]\quad i\in [1,18]\\
+      &R1^t[18]\oplus R1^t[17]\oplus R1^t[16]\oplus R1^t[13]
+    \end{aligned}
+    \right.
+  \end{equation}
+  \item If $R2^t[10]\neq maj_t$, $R2^{t+1}\leftarrow R2^t$, otherwise, call $\tt{updateR2}$ as follows:
+    \begin{equation}\label{eq:UpdateR2}
+    R2^{t+1}[i]\leftarrow\left\{
+    \begin{aligned}
+      &R2^t[i-1]\quad i\in [1,21]\\
+      &R2^t[21]\oplus R2^t[20]
+    \end{aligned}
+    \right.
+  \end{equation}
+    \item If $R3^t[10]\neq maj_t$, $R3^{t+1}\leftarrow R3^t$, otherwise, call $\tt{updateR3}$ as follows:
+    \begin{equation}\label{eq:UpdateR3}
+    R3^{t+1}[i]\leftarrow\left\{
+    \begin{aligned}
+      &R3^t[i-1]\quad i\in [1,22]\\
+      &R3^t[22]\oplus R3^t[21]\oplus R3^t[20]
+    \end{aligned}
+    \right.
+  \end{equation}
+\end{enumerate}
+Then, the output keystream bit $z^t$ is generated as
+\begin{equation}\label{eq:OutputZ}
+  z^t=R1^{t+1}[18]\oplus R2^{t+1}[21]\oplus R3^{t+1}[22]
+\end{equation}
+\section{Move Patterns and Their Bit Condition Representations}
+For each step $t=0,1,2\ldots$, whether the registers $R1,R2,R3$ are updated or not depends on the three control bits $(R1^t[8],R2^t[10],R3^t[10])$. 
+For all $2^3$ $(R1^t[8],R2^t[10],R3^t[10])$ values of, there are 4 possible movements. 
+Each movement corresponds to 2 $(R1^t[8],R2^t[10],R3^t[10])$ values and can also be represented as linear equations of state bits, also referred as bit conditions. 
+The 4 movements are denoted as Move 0-4 as follows:
+\begin{description}
+  \item[Move 0] $\tt{updateR1}$, $\tt{updateR2}$ and $\tt{updateR3}$ are all called. 
+  The corresponding $(R1^t[8],R2^t[10],R3^t[10])$ values are $(0,0,0)$ and $(1,1,1)$.
+  The bit conditions are:
+  \begin{equation}\label{eq:Move0BitCondition}
+    \left\{
+    \begin{aligned}
+    &R1^t[8]=R2^t[10]\\
+    &R1^t[8]=R3^t[10]
+    \end{aligned}
+    \right.
+    \Leftrightarrow
+    \left\{
+    \begin{aligned}
+    &S^t[8]\oplus S^t[29]=0\\
+    &S^t[8]\oplus S^t[51]=0
+    \end{aligned}
+    \right.
+  \end{equation}
+  \item[Move 1] Only $\tt{updateR2}$ and $\tt{updateR3}$ are called. ($(R1^t[8],R2^t[10],R3^t[10])\in \{(0,1,1),(1,0,0)\}$)
+  The corresponding $(R1^t[8],R2^t[10],R3^t[10])$ values are $(0,1,1)$ and $(1,0,0)$.
+  The bit conditions are:
+  \begin{equation}\label{eq:Move1BitCondition}
+    \left\{
+    \begin{aligned}
+    &R1^t[8]=R2^t[10]\oplus 1\\
+    &R1^t[8]=R3^t[10]\oplus 1
+    \end{aligned}
+    \right.
+    \Leftrightarrow
+    \left\{
+    \begin{aligned}
+    &S^t[8] \oplus S^t[29]=1\\
+    &S^t[8] \oplus S^t[51]=1
+    \end{aligned}
+    \right.
+  \end{equation}
+  \item[Move 2] Only $\tt{updateR1}$ and $\tt{updateR3}$ are called. ($(R1^t[8],R2^t[10],R3^t[10])\in \{(0,1,1),(1,0,0)\}$)
+  The corresponding $(R1^t[8],R2^t[10],R3^t[10])$ values are $(1,0,1)$ and $(0,1,0)$.
+  The bit conditions are:
+  \begin{equation}\label{eq:Move2BitCondition}
+    \left\{
+    \begin{aligned}
+    &R1^t[8]=R2^t[10]\oplus 1\\
+    &R1^t[8]=R3^t[10]
+    \end{aligned}
+    \right.
+    \Leftrightarrow
+    \left\{
+    \begin{aligned}
+    &S^t[8]\oplus S^t[29]=1\\
+    &S^t[8]\oplus S^t[51]=0
+    \end{aligned}
+    \right.
+  \end{equation}
+  \item[Move 3] Only $\tt{updateR1}$ and $\tt{updateR2}$ are called. ($(R1^t[8],R2^t[10],R3^t[10])\in \{(0,1,1),(1,0,0)\}$)
+  The corresponding $(R1^t[8],R2^t[10],R3^t[10])$ values are $(1,1,0)$ and $(0,0,1)$.
+  The bit conditions are:
+  \begin{equation}\label{eq:Move3BitCondition}
+    \left\{
+    \begin{aligned}
+    &R1^t[8]=R2^t[10]\\
+    &R1^t[8]=R3^t[10]\oplus 1
+    \end{aligned}
+    \right.
+    \Leftrightarrow
+    \left\{
+    \begin{aligned}
+    &S^t[8]\oplus S^t[29]=0\\
+    &S^t[8]\oplus S^t[51]=1
+    \end{aligned}
+    \right.
+  \end{equation}
+\end{description}
+
+\section{Move Guesses and Bit Condition Deductions}
+In our guess and determine attack, for $t=0,1,...$, we first guess the movement corresponding to $S^t\rightarrow S^{t+1}$ and maintains a bit condition set $\mathcal{B}$ by adding new bit conditions corresponding to the new movement and the output $z^t$. 
+For each step $t$, there are 3 bit conditions: 2 are from one of \eqref{eq:Move0BitCondition}, \eqref{eq:Move1BitCondition}, \eqref{eq:Move2BitCondition}, \eqref{eq:Move3BitCondition} according to the move guess and the rest is from the output $z^t$ as
+\begin{equation}\label{eq:OutputBitCondition}
+S^{t+1}[18]\oplus S^{t+1}[40]\oplus S^{t+1}[63]=z^t
+\end{equation}
+So each move guess can deduce 3 bit conditions. 
+As can be seen, the move conditions \eqref{eq:Move0BitCondition}, \eqref{eq:Move1BitCondition}, \eqref{eq:Move2BitCondition}, \eqref{eq:Move3BitCondition} and the output condition \eqref{eq:OutputBitCondition} correspond to the internal state at different time instance. 
+But our attack is targeted to recovering the initial state $S^0$. 
+Therefore, we need to represent the internal states at different time instance $t$ with the $S^0$ so that the bit conditions are represented by $S^0$ bits as well. 
+
+
+\section{Conclusion}
+In this paper, we proposed a new modeling technique for the three-subset division property without unknown subset.
+Our technique is significant for the application to the cube attack.
+Unlike the previous experimental or theoretical cube attacks, our method does not need any assumption and can recover the actual superpoly in practical time.
+Our method leads to the best key-recovery attack on some of the most important stream ciphers.
+
+
+\subsubsection*{Acknowledgement.}
+The authors thank the anonymous Eurocrypt 2020 reviewers for careful reading and many helpful comments.
+Yonglin Hao is supported by National Key Research and Development Program of China (No. 2018YFA0306404).
+Gregor Leander is supported  by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) under Germany's Excellence Strategy - EXC 2092 CASA - 390781972.
+Qingju Wang is funded by the University of Luxembourg Internal Research Project (IRP) FDISC.
+
+
+
+\ifLNCSVER
+  \bibliographystyle{splncs}
+\else
+  \bibliographystyle{alpha}
+\fi
+\bibliography{bib/abbrev3,bib/crypto,myrefs}
+
+
+
+
+\ifLNCSVER
+
+\else
+
+\fi
+
+
+
+\end{document}
+
