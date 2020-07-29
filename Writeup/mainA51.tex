@@ -164,6 +164,7 @@ The 4 movements are denoted as Move 0-4 as follows:
     \right.
   \end{equation}
 \end{description}
+We denote the movement $S^t\rightarrow S^{t+1}$ as $m^t\in \mathbb{F}_2^2= \{0,1,2,3\}$. 
 
 \section{Move Guesses and Bit Condition Deductions}
 In our guess and determine attack, for $t=0,1,...$, we first guess the movement corresponding to $S^t\rightarrow S^{t+1}$ and maintains a bit condition set $\mathcal{B}$ by adding new bit conditions corresponding to the new movement and the output $z^t$. 
@@ -175,20 +176,13 @@ So each move guess can deduce 3 bit conditions.
 As can be seen, the move conditions \eqref{eq:Move0BitCondition}, \eqref{eq:Move1BitCondition}, \eqref{eq:Move2BitCondition}, \eqref{eq:Move3BitCondition} and the output condition \eqref{eq:OutputBitCondition} correspond to the internal state at different time instance. 
 But our attack is targeted to recovering the initial state $S^0$. 
 Therefore, we need to represent the internal states at different time instance $t$ with the $S^0$ so that the bit conditions are represented by $S^0$ bits as well. 
+With the movements $m^0,\ldots, m^t$ guessed, each bits of $S^{t+1}$ are linear equations of $S^0$. 
+We can track the equations with a 64-bit word.  
 
 
 \section{Conclusion}
-In this paper, we proposed a new modeling technique for the three-subset division property without unknown subset.
-Our technique is significant for the application to the cube attack.
-Unlike the previous experimental or theoretical cube attacks, our method does not need any assumption and can recover the actual superpoly in practical time.
-Our method leads to the best key-recovery attack on some of the most important stream ciphers.
 
 
-\subsubsection*{Acknowledgement.}
-The authors thank the anonymous Eurocrypt 2020 reviewers for careful reading and many helpful comments.
-Yonglin Hao is supported by National Key Research and Development Program of China (No. 2018YFA0306404).
-Gregor Leander is supported  by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) under Germany's Excellence Strategy - EXC 2092 CASA - 390781972.
-Qingju Wang is funded by the University of Luxembourg Internal Research Project (IRP) FDISC.
 
 
 
