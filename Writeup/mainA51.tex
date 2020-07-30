@@ -7,10 +7,11 @@
 % start of an individual contribution
 \mainmatter
 % first the title is needed
-\title{Analyze the Tradeoffs in A5/1 Key-Recovery Attacks}
-%\author{Yonglin Hao\inst{1}}
-%\institute{
-%	State Key Laboratory of Cryptology, P.O. Box 5159, Beijing 100878, China, \email{haoyonglin@yeah.net} \and
+\title{State-Recovery Attacks on A5/1 with Negligible Memory Complexities}
+\author{Yonglin Hao\inst{1}}
+\institute{
+	State Key Laboratory of Cryptology, P.O. Box 5159, Beijing 100878, China, \email{haoyonglin@yeah.net} }
+%\and
 %	Ruhr University Bochum, Horst G{\"o}rtz Institute for IT Security, Germany, \email{gregor.leander@rub.de} \and
 %	FHNW, Windisch, Switzerland, \email{willimeier48@gmail.com} \and
 %	NTT Secure Platform Laboratories, Tokyo 180-8585, Japan, \email{yosuke.todo.xt@hco.ntt.co.jp} \and
@@ -28,12 +29,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   Abstract   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-We analyze the
+We propose a series of state-recovery attacks on A5/1 with negligible memory complexities. 
+The time complexity can be as low as $2^{43.91}$ and the data complexity is only 32 bits.  
 \keywords{stream ciphers, A5/1, guess-and-determine}
 \end{abstract}
 
 \section{Introduction}
-We analyze the attack given by Bin Zhang in \cite{AC:Zhang19} only to find that the complexities given in \cite{AC:Zhang19} are wrong.
+We analyze the attack given by Bin Zhang in \cite{AC:Zhang19} only to find that the complexities given in \cite{AC:Zhang19} are far too optimistic.
 As a remedy, we give detailed analysis to all the possible tradeoffs in the guess-and-determine attacks on A5/1 and give the best practical attack requiring simple $2^{44.60}$ computations and a negligible memory complexity.
 
 
@@ -179,7 +181,7 @@ But our attack is targeted to recovering the initial state $\vec{s}^0$.
 Therefore, we need to represent the internal states at different time instance $t$ with the $\vec{s}^0$ so that the bit conditions are represented by $\vec{s}^0$ bits as well.
 With the knowledge of $m^0,\ldots, m^t$ guessed, each $\vec{s}^{t+1}$ bit can be expressed as a linear combination of $\vec{s}^0$ bits.
 Since each linear combination of $\vec{s}^0$ bits can be regarded as a inner-product of $\vec{s}^0$ and a 64-bit word $\vec w\in \mathbb{F}_2^{64}$, we can track each $\vec{s}^0,\ldots, \vec{s}^t, \vec{s}^{t+1}$ bits with 64 64-bit words denoted as $W^0,\ldots, W^t, W^{t+1}\in (\mathbb{F}_2^{64})^{64}$.
-The initial $W^0$ corresponds to $\vec{s}^0$ is defined naturally as 
+The initial $W^0$ corresponds to $\vec{s}^0$ is defined naturally as
 \begin{equation}\label{eq:W0ofS0}
   W^0=(\vec e_0, \ldots, \vec e_{63}), \text{ where } \vec e_i[j]=\left\{
   \begin{split}
@@ -188,25 +190,25 @@ The initial $W^0$ corresponds to $\vec{s}^0$ is defined naturally as
   \end{split}
   \right.\text{ for }i=0,\ldots, 63
 \end{equation}
-so as to make sure $W^0[i]\cdot \vec{s^0}=\vec{e}_i\cdot \vec{s^0}=\vec{s^0}[i]$ for $i=0,\ldots, 63$. 
-For $t=0,\ldots, t$, the $W^{t+1}$ can be deduced from $W^t$ according to the movement $m^t$ by calling 
-$W^{t+1}\leftarrow {\tt UpdW}(m^t, W^t)$ described in Algorithm \ref{alg:updateW}. 
+so as to make sure $W^0[i]\cdot \vec{s^0}=\vec{e}_i\cdot \vec{s^0}=\vec{s^0}[i]$ for $i=0,\ldots, 63$.
+For $t=0,\ldots, t$, the $W^{t+1}$ can be deduced from $W^t$ according to the movement $m^t$ by calling
+$W^{t+1}\leftarrow {\tt UpdW}(m^t, W^t)$ described in Algorithm \ref{alg:updateW}.
 With the knowledge of $W^t$, the state bit of $\vec{s^t}$ can be uniformly expressed as a linear combination of $\vec{s^0}$ bits as
 \begin{equation}\label{eq:ExpressStwithS0}
 \vec{s^t}[i]=W^t[i]\cdot \vec{s^0}
 \end{equation}
-For $t$ consecutive movements $m^0,\ldots,m^t$ and the corresponding output $z^0,\ldots, z^t$, we can deduce the corresponding bit condition set $\mathcal{BC}^t$ as $\mathcal{BC}^t\leftarrow {\tt{getBC}}((m^0,\ldots, m^t), (z^0,\ldots, z^t))$ where ${\tt{getBC}}$ is defined as Algorithm \ref{alg:getBC}. 
+For $t$ consecutive movements $m^0,\ldots,m^t$ and the corresponding output $z^0,\ldots, z^t$, we can deduce the corresponding bit condition set $\mathcal{BC}^t$ as $\mathcal{BC}^t\leftarrow {\tt{getBC}}((m^0,\ldots, m^t), (z^0,\ldots, z^t))$ where ${\tt{getBC}}$ is defined as Algorithm \ref{alg:getBC}.
 The bit condition set $\mathcal{BC}^t$ can be regarded as a linear equation system in \eqref{eq:BCLpSystem}
 \begin{equation}\label{eq:BCLpSystem}
   A\vec x^T=\vec b^T, \text{ where } A\in \mathbb{F}_2^{3t\times 64}, \vec x\in \mathbb{F}_2^{64}, \vec b\in \mathbb{F}_2^{3t}
 \end{equation}
-and the solutions to the linear system in \eqref{eq:BCLpSystem} is exactly the possible values of the internal state $\vec{s^0}$. 
-The number of solutions to \eqref{eq:BCLpSystem} depends on the order of the matrix $A$ and its extended matrix 
+and the solutions to the linear system in \eqref{eq:BCLpSystem} is exactly the possible values of the internal state $\vec{s^0}$.
+The number of solutions to \eqref{eq:BCLpSystem} depends on the order of the matrix $A$ and its extended matrix
 \begin{equation}\label{eq:ExtendedMatrixOfA}
   E=[A,\vec b^T]
 \end{equation}
-If $order(A)=order(E)$, there will be $2^{64-order(A)}$ solutions; otherwise, there will be no solutions at all. 
-Apparently, the matrix $A$ and the vector $\vec b$ are both deduced according to the movements $m^0,\ldots, m^t$ and the output bits $z^0,\ldots, z^t$. 
+If $order(A)=order(E)$, there will be $2^{64-order(A)}$ solutions; otherwise, there will be no solutions at all.
+Apparently, the matrix $A$ and the vector $\vec b$ are both deduced according to the movements $m^0,\ldots, m^t$ and the output bits $z^0,\ldots, z^t$.
 Since the output $z^0,\ldots, z^t$ are known, in order to recover the internal state $\vec{s^0}$, our guess and determine attack suggest us to guess the movements, deduce the possible $\vec s^0$ values by solving the linear system in \eqref{eq:BCLpSystem} and determine the exact $\vec{s^0}$ with some additional output bits, say $z^{t+1},\ldots, z^{\ell}$ generated by the encryption oracle.
 The general process of our guess and determine attack is as follows:
 \begin{enumerate}
@@ -216,11 +218,62 @@ The general process of our guess and determine attack is as follows:
       \begin{enumerate}
         \item Deduce the $A$ and $\vec b$ in \eqref{eq:BCLpSystem} according to $\mathcal{BC}$ and compute the extended matrix $E$ in \eqref{eq:ExtendedMatrixOfA}
         \item Compute $order(A)$ and $order(E)$, if $order(A)\neq order(E)$, such a movement guess is wrong, go back to Step 2 for the next movement guess
-        \item For all $2^{64-order(A)}$ solutions to $A\vec x^T=b^T$, set $\vec{s^0}'\leftarrow \vec x$ and generate the keystream bits $z^0,\ldots, z^t,z^{t+1},\ldots, z^{\ell}$ 
-        \item If $(s^{t+1},\ldots, s^{\ell})=()$, add such $\vec{s^0}'$ into $\mathcal{S}$
+        \item For all $2^{64-order(A)}$ solutions to $A\vec x^T=b^T$, set $\vec{\hat{s}^0}\leftarrow \vec x$ and generate the keystream bits $\hat{z}^0,\ldots, \hat{z}^t,\hat{z}^{t+1},\ldots, \hat{z}^{\ell}$
+        \item If $(\hat{z}^{t+1},\ldots, \hat{z}^{\ell})=(z^{t+1},\ldots, z^{\ell})$, add such $\vec{\hat{s}^0}$ into $\mathcal{S}$
       \end{enumerate}
   \item Return $\mathcal{S}$
 \end{enumerate}
+When $\ell$ is large enough, there should be only 1 element in $\mathcal{S}$ which is exactly the correct internal state $\vec{s^0}$.
+
+\noindent\textbf{Complexity Analysis. }
+In Step 3, there are $2^{2t}$ candidate moves $(m^0,\ldots, m^{t})$ and not all of them can pass the $order(A)=order(E)$ test Step 3.(b).
+We suppose that there is an positive number $0\leq \alpha \leq 1$ that averaging $\alpha  2^{2t}$ moves can pass the test.
+We further denote the averaging $order(A)$ as $\beta $.
+With $\alpha ,\beta $, the averaging time complexity can be computed as e
+\begin{equation}\label{eq:Complexity}
+  Comp=2^{2t}+\alpha \cdot 2^{2t+64-\beta }=2^{2t}+2^{2t+64-\beta +\log\alpha }
+\end{equation}
+We randomly select $2^{30}$ $((m^0,\ldots, m^t), (z^0,\ldots, z^m))$ pairs and do the 3.(b) test to compute the averaging $\alpha_t$ and $\beta_t$ for $t$'s.
+We find that when $t<14$, $\alpha \approx 1$ and $\beta\leq 3t$ so the overall complexity is constantly larger than $2^{64-t}\geq 2^{51}$.
+For $14\leq t\leq 29$, the $\alpha$, $\beta_t$ and $Comp$ are listed in Table \ref{tab:AlphaAndBeta}. 
+As can be seen, the lowest complexity appears at $t=21$ with $Comp=2^{43.91}$. 
+The memory complexity is only $\mathcal{BC}$ and the corresponding matrix $A$ as well as its extended matrix $E$ in \eqref{eq:BCLpSystem} and \eqref{eq:ExtendedMatrixOfA}. 
+The memory complexity is only $O(t)$. 
+As can be seen in Table \ref{tab:AlphaAndBeta}, the order $\beta$ has already climbed to almost 64 for $t=27$. 
+So we can safely set $\ell=32$ to filter the wrong movement guesses. 
+According to our experiment, $\ell=32$ is well enough to identify the correct $\vec{s^0}$. 
+
+
+
+\begin{table}[htbp]
+  \centering
+  \caption{The averaging $\alpha_t$ and $\beta_t$ in \eqref{eq:Complexity} with $2^{30}$ random tests}\label{tab:AlphaAndBeta}
+    \begin{tabular}{|l|l|l|l|l|l|l|l|}
+    \hline
+    \multicolumn{1}{|c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\alpha$} & \multicolumn{1}{c|}{$Comp$} & \multicolumn{1}{c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\alpha$} & \multicolumn{1}{c|}{$Comp$} \\
+    \hline
+
+    14    & 41.95852 & -0.02809 & 50.01338 & 22    & 61.60404 & -3.97115 & 44.41749 \\
+    \hline
+    15    & 44.86764 & -0.09501 & 49.03736 & 23    & 62.78097 & -5.91544 & 46.0546 \\
+    \hline
+    16    & 47.68339 & -0.23144 & 48.08519 & 24    & 63.43321 & -8.4195 & 48.00623 \\
+    \hline
+    17    & 50.38127 & -0.46833 & 47.15056 & 25    & 63.75542 & -11.173 & 50.00074 \\
+    \hline
+    18    & 52.95498 & -0.81293 & 46.23329 & 26    & 63.9043 & -14.0599 & 52.00009 \\
+    \hline
+    19    & 55.4087 & -1.26981 & 45.33048 & 27    & 63.96694 & -17.0267 & 54.00001 \\
+    \hline
+    20    & 57.73363 & -1.85176 & 44.48072 & 28    & 63.98999 & -20.0213 & 56 \\
+    \hline
+    21    & 59.86026 & -2.67122 & \textbf{43.91356} & 29    & 63.99728 & -23.1174 & 58 \\
+    \hline
+
+    \end{tabular}%
+  \label{tab:Example1}%
+\end{table}%
+
 
 \begin{algorithm}[htbp]
 	\caption{Deduce the equation word set according to a movement} \label{alg:updateW}
@@ -275,7 +328,7 @@ The general process of our guess and determine attack is as follows:
 	\begin{algorithmic}[1]
 		\Procedure{{\tt getBC}}{movements $(m^0,\ldots, m^t)\in \{0,3\}^t$, output bits $(z^0,\ldots, z^t)\in \mathbb{F}_2^{t}$}
 \State Initialize the words $W^0\leftarrow (\vec e_0,\ldots, \vec e_{63})$ according to \eqref{eq:W0ofS0}
-\State Initialize the bit condition set as empty: $\mathcal{BC}\leftarrow \phi$  
+\State Initialize the bit condition set as empty: $\mathcal{BC}\leftarrow \phi$
 \State Initialize $\vec{x}=(x_0,\ldots, x_{63})$ as vector of 63 unknown boolean variables corresponding to the 64 state bits of $\vec s^0$
 \For{$i=0,1,\ldots, t$}
 \If{$m^i=0,1,2,3$}
@@ -285,7 +338,7 @@ The general process of our guess and determine attack is as follows:
 \begin{split}
 (W^i[8]\oplus W^t[29])\cdot \vec x&=0,1,1,0\\
 (W^i[8]\oplus W^t[51])\cdot \vec x&=0,1,0,1
-\end{split}  
+\end{split}
 \right.
 \]
 \EndIf

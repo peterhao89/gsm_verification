@@ -16,55 +16,6 @@
 
 #if PRACTICAL_ATTACK
 
-
-
-long getRemainedNumberOnce(int round) {
-	u64 initState = rand_64();
-	long once = 0;
-	u64 totalGuess = 1;
-	totalGuess <<= (2 * round);
-	A5_1_S100 runner(initState);
-	vector<u64> trackZ;
-	for (int r = 0; r < round; ++r) {
-		runner.doOneStep();
-	}
-	u64 prefix = runner.getPrefix();
-	u64 haveDoneMoves = runner.getHaveDoneMoveMask();
-	PracticalAttack attack(96);
-	long passedNumber = 0;
-	for (u64 guess = 0; guess < totalGuess; ++guess) {
-		if (guess == haveDoneMoves)continue;
-		attack.constructEquations(guess, prefix, round);
-		if (attack.isFeasible()) {
-			++passedNumber;
-		}
-	}
-	return passedNumber;
-
-
-}
-
-
-int main() {
-	srand(time(NULL));
-	int roundUpper = 16;
-	ofstream file1("RemainedByRound.txt");
-	
-	for (int r = 14; r < roundUpper; ++r) {
-		long rRemain = getRemainedNumberOnce(r);
-		for (int i = 0; i < 2; ++i) {
-			ostream& o  = (i == 0) ? cout : file1;
-			o << dec << "Round " << r << ";" << rRemain << endl;
-		}
-	}
-	file1.close();
-
-
-	return 0;
-}
-
-
-#if TEST_COMPONENTS
 u64 sum64(u64 vec) {
 	u64 summation = 0;
 	for (int i = 0; i < 64; ++i)
@@ -72,74 +23,72 @@ u64 sum64(u64 vec) {
 	return summation;
 }
 
+//guess: 0 for correct guess; otherwise wrong guess
+int testOnce(long guess) {
+	u64 initState = rand_64();
+	PracticalAttack attack = PracticalAttack();
+	A5_1_S100 orderCheckRunnter(initState);
+	int currentHaveDoneStep = 0;
+	do {
+		orderCheckRunnter.doOneStep();
+		u64 thisMove;
+		if (guess == 0) {
+			thisMove = orderCheckRunnter.getLastMoveMask();
+		}
+		else {
+			do {
+				thisMove = rand_64() & 0x3;
+			} while (thisMove == orderCheckRunnter.getLastMoveMask());
+		}
+
+		attack.doOneMove(thisMove, orderCheckRunnter.getCurrentZ());
+		++currentHaveDoneStep;
+		bool passCurrent = attack.isFeasible();
+		if (!passCurrent) {
+			break;
+		}
+	} while (attack.matOrder != 64 && currentHaveDoneStep < 32);
+	return currentHaveDoneStep;
+}
+
+
+
+RR getAvgSteps(long guess, long testTime=(1<<20)) {
+	RR counter = to_RR(1);
+	RR collector = to_RR(0);
+	RR totalTestTime = to_RR(testTime);
+	for (; counter < totalTestTime; ++counter) {
+		collector += to_RR(testOnce(guess));
+	}
+	return collector / totalTestTime;
+}
 
 int main() {
 	srand(time(NULL));
-	int targetSteps = 23;
-	u64 initState = rand_64();
-	A5_1_S100 runner(initState);
-	vector<u64> trackZ;
-	for (int r = 0; r < targetSteps; ++r) {
-		cout << "R1[8]:" << runner.getRiBit(1, 8) << endl;
-		cout << "R2[10]:" << runner.getRiBit(2, 10) << endl;
-		cout << "R3[10]:" << runner.getRiBit(3, 10) << endl;
-		runner.doOneStep();
-		cout << "Last Move Mask=" << runner.getLastMoveMask() << endl;
-		cout << "z" << r <<"="<< runner.getCurrentZ()<< endl;
-		trackZ.push_back(runner.getCurrentZ());
-	}
-	u64 prefix = runner.getPrefix();
-	for (int i = 0; i < trackZ.size(); ++i) {
-		cout << (trackZ[i] ^ bit64(prefix, i)) << ",";
-	}
-	cout << endl;
+	long testTime = 1;
+	testTime <<= 20;
+	clock_t end;
 
-	A5_1_S100 eqCheckRunner(initState);
-	InternalStateEquations stateEq=InternalStateEquations();
-	
-	
-	for (int r = 0; r < targetSteps; ++r) {
-		eqCheckRunner.doOneStep();
-		stateEq.doOneStep(eqCheckRunner.getOneStepMoveMask(r));
-		u64 currentWholeState = eqCheckRunner.getWholeState();
-		for (int bitNo = 0; bitNo < 64; ++bitNo) {
-			if (sum64(stateEq.currentState[bitNo] & initState) != bit64(currentWholeState, bitNo)) {
-				cout << "Fail step " << r << " at bitNo " << bitNo << endl;
-			}
-		}
-		if (sum64(stateEq.getOutputEquation() & initState) != eqCheckRunner.getCurrentZ()) {
-			cout << "Fail step " << r << " at output\n";
-		}
-	}
+	clock_t start = clock();
+	RR avgCorrect = getAvgSteps(0, testTime);
+	RR avgWrong = getAvgSteps(1, testTime);
+	end = clock();
 
-	int currentHaveDoneStep = 0;
-	PracticalAttack attack = PracticalAttack();
-	A5_1_S100 orderCheckRunnter(initState);
-	do {
-		cout << "Step " << currentHaveDoneStep << endl;
-		orderCheckRunnter.doOneStep();
-		//Currect guess
-		//attack.doOneMove(orderCheckRunnter.getLastMoveMask(), orderCheckRunnter.getCurrentZ());
-		//Incorrect guess
-		u64 wrongMove;
-		do {
-			wrongMove = rand_64() & 0x3;
-		} while (wrongMove!= orderCheckRunnter.getLastMoveMask());
-		attack.doOneMove(wrongMove, orderCheckRunnter.getCurrentZ());
-		++currentHaveDoneStep;		
-		bool passCurrent = attack.isFeasible();
-		cout << "MatOrder: " << attack.matOrder << endl;
-		if (!passCurrent) {
-			cout << "Current step infeasible!\n";
-			cout << "Have passed " << currentHaveDoneStep << " steps in total!\n";
-			break;
-		}		
-	} while (attack.matOrder != 64 && currentHaveDoneStep<32);
-	cout << currentHaveDoneStep << " steps in total!\n";
+	ofstream file1("WrongCorrectStepDiff.txt");
+	cout << "Total:" << testTime << endl;
+	cout << "Correct:" << avgCorrect << endl;
+	cout << "Wrong:" << avgWrong << endl;
+	cout << "Time:" << (end - start) << "ms" << endl;
+	file1 << "Total:" << testTime << endl;
+	file1 << "Correct:" << avgCorrect << endl;
+	file1 << "Wrong:" << avgWrong << endl;
+	file1 << "Time:" << (end - start) << "ms" << endl;
+	file1.close();
+	
 
 	return 0;
 }
-#endif
+
 #endif
 
 #if GEN_GUESS_TABLE
@@ -244,6 +193,97 @@ int main(int argc, char const* argv[]) {
 		cout << hex << "prefix=" << pattern << endl;
 		cout << dec << "The merged list L has #L=" << Lz0_z4.size() << endl;
 	}
+	return 0;
+}
+#endif
+
+#if TEST
+int main() {
+	srand(time(NULL));
+	int targetSteps = 23;
+	u64 initState = rand_64();
+	A5_1_S100 runner(initState);
+	vector<u64> trackZ;
+	for (int r = 0; r < targetSteps; ++r) {
+		cout << "R1[8]:" << runner.getRiBit(1, 8) << endl;
+		cout << "R2[10]:" << runner.getRiBit(2, 10) << endl;
+		cout << "R3[10]:" << runner.getRiBit(3, 10) << endl;
+		runner.doOneStep();
+		cout << "Last Move Mask=" << runner.getLastMoveMask() << endl;
+		cout << "z" << r << "=" << runner.getCurrentZ() << endl;
+		trackZ.push_back(runner.getCurrentZ());
+	}
+	u64 prefix = runner.getPrefix();
+	for (int i = 0; i < trackZ.size(); ++i) {
+		cout << (trackZ[i] ^ bit64(prefix, i)) << ",";
+	}
+	cout << endl;
+
+	A5_1_S100 eqCheckRunner(initState);
+	InternalStateEquations stateEq = InternalStateEquations();
+
+
+	for (int r = 0; r < targetSteps; ++r) {
+		eqCheckRunner.doOneStep();
+		stateEq.doOneStep(eqCheckRunner.getOneStepMoveMask(r));
+		u64 currentWholeState = eqCheckRunner.getWholeState();
+		for (int bitNo = 0; bitNo < 64; ++bitNo) {
+			if (sum64(stateEq.currentState[bitNo] & initState) != bit64(currentWholeState, bitNo)) {
+				cout << "Fail step " << r << " at bitNo " << bitNo << endl;
+			}
+		}
+		if (sum64(stateEq.getOutputEquation() & initState) != eqCheckRunner.getCurrentZ()) {
+			cout << "Fail step " << r << " at output\n";
+		}
+	}
+
+	int currentHaveDoneStep = 0;
+	PracticalAttack attack = PracticalAttack();
+	A5_1_S100 orderCheckRunnter(initState);
+	do {
+		cout << "Step " << currentHaveDoneStep << endl;
+		orderCheckRunnter.doOneStep();
+		//Currect guess
+		//attack.doOneMove(orderCheckRunnter.getLastMoveMask(), orderCheckRunnter.getCurrentZ());
+		//Incorrect guess
+		u64 wrongMove;
+		do {
+			wrongMove = rand_64() & 0x3;
+		} while (wrongMove == orderCheckRunnter.getLastMoveMask());
+		attack.doOneMove(wrongMove, orderCheckRunnter.getCurrentZ());
+		++currentHaveDoneStep;
+		bool passCurrent = attack.isFeasible();
+		cout << "MatOrder: " << attack.matOrder << endl;
+		if (!passCurrent) {
+			cout << "Current step infeasible!\n";
+			cout << "Have passed " << currentHaveDoneStep << " steps in total!\n";
+			break;
+		}
+	} while (attack.matOrder != 64 && currentHaveDoneStep < 32);
+	cout << currentHaveDoneStep << " steps in total!\n";
+	PracticalAttack attack = PracticalAttack();
+	A5_1_S100 orderCheckRunnter(initState);
+	do {
+		cout << "Step " << currentHaveDoneStep << endl;
+		orderCheckRunnter.doOneStep();
+		//Currect guess
+		//attack.doOneMove(orderCheckRunnter.getLastMoveMask(), orderCheckRunnter.getCurrentZ());
+		//Incorrect guess
+		u64 wrongMove;
+		do {
+			wrongMove = rand_64() & 0x3;
+		} while (wrongMove == orderCheckRunnter.getLastMoveMask());
+		attack.doOneMove(wrongMove, orderCheckRunnter.getCurrentZ());
+		++currentHaveDoneStep;
+		bool passCurrent = attack.isFeasible();
+		cout << "MatOrder: " << attack.matOrder << endl;
+		if (!passCurrent) {
+			cout << "Current step infeasible!\n";
+			cout << "Have passed " << currentHaveDoneStep << " steps in total!\n";
+			break;
+		}
+	} while (attack.matOrder != 64 && currentHaveDoneStep < 32);
+	cout << currentHaveDoneStep << " steps in total!\n";
 	return 0;
 }
 #endif
