@@ -4,14 +4,113 @@
 #define TEST 0
 #define MERGE 0
 #define GEN_GUESS_TABLE 0
-#define PRACTICAL_ATTACK 1
+#define PRACTICAL_ATTACK 0
+#define DDT_GENERATION 1
 
 #if GEN_GUESS_TABLE
 #include"GuessDetermineCP.hpp"
-#elif PRACTICAL_ATTACK
+#elif PRACTICAL_ATTACK || DDT_GENERATION
 #include"A51Impl.hpp"
 #include"PracticalAttack.hpp"
 #endif
+
+#if DDT_GENERATION
+const vector<int> relatedBitsZ0 = { 8,17,18, 29,39,40, 51,62,63 };
+const vector<int> relatedBitsZ0Z1 = { 7,8,16,17,18,  28,29,38,39,40,  50,51,61,62,63 };
+void getAllDiff(vector<int> elements, int d, vector<u64> & collector) {
+	vector<int> index;
+	for (int i = 0; i <= d; ++i)index.push_back(i - 1);
+	bool flag = true;
+	int count = 0;
+	int k = d;
+	while (index[0] == -1) {
+		if (flag) {
+			u64 elem = 0;
+
+			for (int i = 1; i <= d; ++i) {
+				setBitVal(elem, elements[index[i]], 1);
+			}
+			collector.push_back(elem);
+			count++;
+			flag = false;
+		}
+		index[k]++;
+		if (index[k] == elements.size()) {
+			index[k--] = 0;
+			continue;
+		}
+		if (k < d) {
+			index[++k] = index[k - 1];
+			continue;
+		}
+		if (k == d)flag = true;
+
+	}
+}
+
+struct IsdProb {
+
+	u64 isd;
+	double prob;
+	IsdProb(u64 i, double p) {
+		isd = i;
+		prob = p;
+	}
+};
+
+IsdProb getProb(u64 isd, vector<int> rbits, u64 ksd=0x3, int bitNo=2) {
+
+	u64 totalXNumber = 1;
+	totalXNumber<<= rbits.size();
+	long satisfiedNumber = 0;
+	for (u64 counter = 0; counter < totalXNumber; ++counter) {
+		u64 initState = 0;
+		for (int i = 0; i < rbits.size(); ++i) {
+			if(bit64(counter, i)==1)setBitVal(initState, rbits[i], 1);
+		}
+		A5_1_S100 imp(initState);
+		A5_1_S100 imp1(initState^isd);
+		bool satisfied = true;
+		for (int i = 0; i < bitNo; ++i) {
+			imp.doOneStep();
+			imp1.doOneStep();
+			if (bit64(ksd,i)!=(imp.getCurrentZ() ^ imp1.getCurrentZ())) {
+				satisfied = false;
+				break;
+			}
+		}
+		if (satisfied)satisfiedNumber++;
+	}
+	double prob = double(satisfiedNumber) / totalXNumber;
+	IsdProb res = { isd,prob };
+	return res;
+}
+
+
+
+int main(){
+
+
+	vector<double> probList;
+	vector<u64> diffLowerThan2;
+	getAllDiff(relatedBitsZ0Z1, 2, diffLowerThan2);
+	getAllDiff(relatedBitsZ0Z1, 1, diffLowerThan2);
+	getAllDiff(relatedBitsZ0Z1, 0, diffLowerThan2);
+	for (int i = 0; i < diffLowerThan2.size(); ++i) {
+		cout << "0x" << hex << diffLowerThan2[i] << ",\n";
+	}
+	cout << dec << "Total:" << diffLowerThan2.size() << endl;
+	
+	
+	
+	
+	return 0;
+}
+
+#endif
+
+
+
 
 
 #if PRACTICAL_ATTACK
