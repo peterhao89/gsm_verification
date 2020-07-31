@@ -54,6 +54,13 @@ inline void setBitVal(u64& reg, int bitNo, u64 val) {
 	}
 }
 
+
+inline void flipBitVal(u64& reg, int bitNo) {
+	u64 msk = 1;
+	msk <<= bitNo;
+	reg ^= msk;
+}
+
 inline u64 maj(u64 a, u64 b, u64 c) {
 	return ((a & b) ^ (b & c) ^ (a & c));
 }
