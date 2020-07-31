@@ -12,7 +12,6 @@
 #include<set>
 #include<algorithm>
 #include <immintrin.h>
-#include<zmmintrin.h>
 #include<fstream>
 #include<omp.h>
 NTL_CLIENT
@@ -159,15 +158,15 @@ public:
 		solve(d, A, x, b);
 		u64 recoveredState = 0;
 		for (int i = 0; i < A5_1_STATE_SIZE; ++i)
-			setBitVal(recoveredState, i, x[i]==1?1:0);
+ 			setBitVal(recoveredState, i, x[i]==1?1:0);
 		return recoveredState;
 	}
 
 	bool isFeasible() {
 		long orderMat = gauss(eqMat);
 		long orderMatExt = gauss(eqMatExtend);
+		matOrder = orderMat;
 		if (orderMat == orderMatExt) {
-			matOrder = orderMat;
 			return true;
 		}
 		else return false;

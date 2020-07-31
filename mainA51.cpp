@@ -23,8 +23,12 @@ u64 sum64(u64 vec) {
 	return summation;
 }
 
+
+
+
+
 //guess: 0 for correct guess; otherwise wrong guess
-int testOnce(long guess) {
+int testOnceOrder64(long guess) {
 	u64 initState = rand_64();
 	PracticalAttack attack = PracticalAttack();
 	A5_1_S100 orderCheckRunnter(initState);
@@ -53,38 +57,149 @@ int testOnce(long guess) {
 
 
 
-RR getAvgSteps(long guess, long testTime=(1<<20)) {
+RR getOrder64AvgSteps(long guess, long testTime=(1<<20)) {
 	RR counter = to_RR(1);
 	RR collector = to_RR(0);
 	RR totalTestTime = to_RR(testTime);
 	for (; counter < totalTestTime; ++counter) {
-		collector += to_RR(testOnce(guess));
+		collector += to_RR(testOnceOrder64(guess));
 	}
 	return collector / totalTestTime;
 }
 
+struct FilterStrengthAtRoundReport{
+	long testTime;
+	u64 matOrderTotal;
+	long passedTimeTotal;
+};
+
+FilterStrengthAtRoundReport getFilterStrengthAtRound(long guess, int round, long testTime = (1 << 20), int threadNumber=6) {
+	u64 maskMask = 0;
+	for (int i = 0; i < round; ++i) {
+		maskMask <<= 2;
+		maskMask |= 0x3;
+	}
+	long passedCount = 0;
+	u64 totalOrder = 0;
+	omp_set_num_threads(threadNumber);
+#pragma omp parallel for reduction(+:passedCount) reduction(+:totalOrder)
+	for (int i = 0; i < threadNumber; ++i) {
+		u64 initState = rand_64();
+		A5_1_S100 orderCheckRunnter(initState);
+		for (long testCount = i; testCount < testTime; testCount += threadNumber) {
+
+			orderCheckRunnter.init(initState);
+			for (int r = 0; r < round; ++r) {
+				orderCheckRunnter.doOneStep();
+			}
+			u64 movesMask = orderCheckRunnter.getHaveDoneMoveMask();
+			if (guess != 0) {
+				do {
+					movesMask = rand_64() & maskMask;
+				} while (movesMask == orderCheckRunnter.getHaveDoneMoveMask());
+			}
+			PracticalAttack attack = PracticalAttack();
+			attack.constructEquations(movesMask,
+				orderCheckRunnter.getPrefix(),
+				round);
+			if (attack.isFeasible()) {
+				++passedCount;
+			}
+			totalOrder += attack.matOrder;
+		}
+	}
+
+	return FilterStrengthAtRoundReport{ testTime, totalOrder,passedCount };
+}
+
+
+inline long getRemained(int round, int threadNumber) {
+	
+	
+	u64 initState = rand_64();
+	A5_1_S100 orderCheckRunnter(initState);
+	orderCheckRunnter.init(initState);
+	for (int r = 0; r < round; ++r) {
+		orderCheckRunnter.doOneStep();
+	}
+	long passedCount = 0;
+	u64 prefix = orderCheckRunnter.getPrefix();
+	u64 correctMask = orderCheckRunnter.getHaveDoneMoveMask();
+	
+	u64 totalMaskNumber = 1;
+	totalMaskNumber <<= (2 * round);
+	omp_set_num_threads(threadNumber);
+#pragma omp parallel for reduction(+:passedCount)
+	for (int i = 0; i < threadNumber; ++i) {
+		for (u64 wrongMask = i; wrongMask < totalMaskNumber; wrongMask = wrongMask + threadNumber) {
+			PracticalAttack attack = PracticalAttack();
+			attack.constructEquations(wrongMask, prefix, round);
+			if (attack.isFeasible()) {
+				passedCount++;
+			}
+		}
+	}
+
+	return passedCount;
+}
+
+
 int main() {
 	srand(time(NULL));
 	long testTime = 1;
-	testTime <<= 20;
-	clock_t end;
+	testTime <<= 30;
 
+#if EXACT_FILTER_AT_ROUND
+	int threadNumber = 6;
+	ofstream file1("ExactRoundFilterEval.txt");
+	for (int round = 14; round < 17; ++round) {
+		long passedCount = getRemained(round,threadNumber);
+		u64 total = 1;
+		total <<= (2 * round);
+		for (int i = 0; i < 2; ++i) {
+			ostream& o = (i == 0) ? cout : file1;
+			o << dec << round << ";" << passedCount << ";" << total << endl;
+		}
+	}
+	file1.close();
+#endif
+	
+#ifndef ROUNDFILTER_RANDOM_WRONG_GUESSES 
+#define ROUNDFILTER_RANDOM_WRONG_GUESSES 1
+#endif
+
+#if ROUNDFILTER_RANDOM_WRONG_GUESSES
+	string header = "Rd;#pss;#matOrder;#test";
+	ofstream file1("RoundFilterEval.txt");
+	file1 << header << endl;
+	for (int round = 14; round < 30; ++round) {
+		FilterStrengthAtRoundReport mm = getFilterStrengthAtRound(1, round, testTime);
+		for (int i = 0; i < 2; ++i) {
+			ostream& o = (i == 0) ? cout : file1;
+			o << dec <<round<<";"<< mm.passedTimeTotal << ";"<<mm.matOrderTotal <<";"<< mm.testTime << endl;
+		}
+	}
+	file1.close();
+#endif
+
+
+#if AVGROUNDS_RIGHT_OR_WRONG
+	clock_t end;
 	clock_t start = clock();
-	RR avgCorrect = getAvgSteps(0, testTime);
-	RR avgWrong = getAvgSteps(1, testTime);
+	RR avgCorrect = getOrder64AvgSteps(0, testTime);
+	RR avgWrong = getOrder64AvgSteps(1, testTime);
 	end = clock();
 
 	ofstream file1("WrongCorrectStepDiff.txt");
-	cout << "Total:" << testTime << endl;
-	cout << "Correct:" << avgCorrect << endl;
-	cout << "Wrong:" << avgWrong << endl;
-	cout << "Time:" << (end - start) << "ms" << endl;
-	file1 << "Total:" << testTime << endl;
-	file1 << "Correct:" << avgCorrect << endl;
-	file1 << "Wrong:" << avgWrong << endl;
-	file1 << "Time:" << (end - start) << "ms" << endl;
+	for (int i = 0; i < 2; ++i) {
+		ostream & o = (i == 0) ? cout : file1;
+		o << "Total:" << testTime << endl;
+		o << "Correct:" << avgCorrect << endl;
+		o << "Wrong:" << avgWrong << endl;
+		o << "Time:" << (end - start) << "ms" << endl;
+	}
 	file1.close();
-	
+#endif
 
 	return 0;
 }
@@ -261,29 +376,7 @@ int main() {
 		}
 	} while (attack.matOrder != 64 && currentHaveDoneStep < 32);
 	cout << currentHaveDoneStep << " steps in total!\n";
-	PracticalAttack attack = PracticalAttack();
-	A5_1_S100 orderCheckRunnter(initState);
-	do {
-		cout << "Step " << currentHaveDoneStep << endl;
-		orderCheckRunnter.doOneStep();
-		//Currect guess
-		//attack.doOneMove(orderCheckRunnter.getLastMoveMask(), orderCheckRunnter.getCurrentZ());
-		//Incorrect guess
-		u64 wrongMove;
-		do {
-			wrongMove = rand_64() & 0x3;
-		} while (wrongMove == orderCheckRunnter.getLastMoveMask());
-		attack.doOneMove(wrongMove, orderCheckRunnter.getCurrentZ());
-		++currentHaveDoneStep;
-		bool passCurrent = attack.isFeasible();
-		cout << "MatOrder: " << attack.matOrder << endl;
-		if (!passCurrent) {
-			cout << "Current step infeasible!\n";
-			cout << "Have passed " << currentHaveDoneStep << " steps in total!\n";
-			break;
-		}
-	} while (attack.matOrder != 64 && currentHaveDoneStep < 32);
-	cout << currentHaveDoneStep << " steps in total!\n";
+	
 	return 0;
 }
 #endif
