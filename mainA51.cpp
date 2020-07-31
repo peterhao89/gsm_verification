@@ -26,9 +26,23 @@ int main(){
 	flipBitVal(a, 0);
 	cout << a << endl;
 	int totalSteps =1;
-
+	u64 iterTime = 1;
+	u64 diff = 0x3;
 	u64 z0 = rand_64() & 0x3;
+	while (1) {
+		vector<u64> vec = getLwithAlg3(z0, iterTime, diff);
+		u64 initState = vec[0];
+		A5_1_S100 check(initState);
+		for (int step = 0; step < totalSteps; ++step) {
+			check.doOneStep();
+			if (check.getCurrentZ() != bit64(z0, step)) {
+				cout << step << ":" << "Fail!\n";
+			}
+		}
+	}
 
+
+	/*
 	while (1) {
 		u64 initState = rand_64() & maskZ0Z1;
 		vector<int> hiBits = { 18,40,63 };
@@ -77,7 +91,7 @@ int main(){
 		}
 	}
 	
-
+	*/
 
 
 
