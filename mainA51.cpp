@@ -30,8 +30,8 @@ int main(){
 	u64 diff = 0x3;
 	u64 z0 = rand_64() & 0x3;
 	while (1) {
-		vector<u64> vec = getLwithAlg3(z0, iterTime, diff);
-		u64 initState = vec[0];
+		
+		u64 initState = getInteralStateByStaticZ0Z1(z0);
 		A5_1_S100 check(initState);
 		for (int step = 0; step < totalSteps; ++step) {
 			check.doOneStep();

@@ -1,12 +1,12 @@
 #pragma once
 #include"A51Impl.hpp"
 
-const vector<int> relatedBitsZ0 = { 8,17,18, 29,39,40, 51,62,63 };
+const vector<int> BITS_RELATED_Z0 = { 8,17,18, 29,39,40, 51,62,63 };
 
 
-const vector<int> relatedBitsZ0Z1 = { 7,8,16,17,18,  28,29,38,39,40,  50,51,61,62,63 };
-const u64 maskZ0Z1 = 0xe00c01c030070180;
-const u64 maskZ0 = 0xc008018020060100;
+const vector<int> BITS_RELATED_Z0Z1 = { 7,8,16,17,18,  28,29,38,39,40,  50,51,61,62,63 };
+const u64 MASK_Z0Z1 = 0xe00c01c030070180;
+const u64 MASK_Z0 = 0xc008018020060100;
 
 struct IsdProb {
 
@@ -94,7 +94,7 @@ IsdProb getOneIsdProb(u64 isd, vector<int> rbits, u64 ksd = 0x3, int bitNo = 2) 
 			ddt.insert(isdProb);
 	}
 */
-const vector<IsdProb> ddt0x3 = {
+const vector<IsdProb> DDT0x3 = {
 	{0x6000000000000000,0.75},
 	{0xc000000000,0.75},
 	{0x30000,0.75},
@@ -197,10 +197,52 @@ const vector<IsdProb> ddt0x3 = {
 };
 
 
+u64 getInteralStateByStaticZ0Z1(u64 zPattern) {
+	u64 initState = rand_64() & MASK_Z0Z1; 
+	A5_1_S100 runner(initState);
+	vector<int> hiBits = { 18,40,63 };
+	set<int> haveUsedBit;
+	for (int step = 0; step < 2; ++step) {
+		u64 nextMove = runner.getNextMoveMask();
+		switch (nextMove)
+		{
+		case 0:
+			hiBits[0]--;
+			hiBits[1]--;
+			hiBits[2]--;
+			break;
+		case 1:
+			hiBits[1]--;
+			hiBits[2]--;
+			break;
+		case 2:
+			hiBits[0]--;
+			hiBits[2]--;
+			break;
+		case 3:
+			hiBits[0]--;
+			hiBits[1]--;
+			break;
+		}
+		runner.doOneStep();
+		if (1 == (bit64(zPattern, step) ^ runner.getCurrentZ())) {
+			for (int j = 0; j < 3; ++j) {
+				if (haveUsedBit.find(hiBits[j]) == haveUsedBit.end()) {
+					flipBitVal(initState, hiBits[j]);
+					break;
+				}
+			}
+		}
+		for (int j = 0; j < 3; ++j)haveUsedBit.insert(hiBits[j]);
+	}
+	return initState;
+}
+
+
 vector<u64> getLwithAlg3(u64 z0, u64 iteTime, u64 diff=0x3) {
 	//iteTime=4*2^15/99
 	u64 z1 = (z0 ^ diff);
-	u64 initState = rand_64() & maskZ0Z1;
+	u64 initState = rand_64() & MASK_Z0Z1;
 	A5_1_S100 runner(initState);
 	vector<int> hiBits = { 18,40,63 };
 	set<int> haveUsedBit;
