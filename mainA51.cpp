@@ -1,6 +1,7 @@
 #include<string>
 #include<omp.h>
 #include<cstring>
+#include<time.h>
 #define TEST 0
 #define MERGE 0
 #define GEN_GUESS_TABLE 0
@@ -21,14 +22,40 @@
 
 
 int main(){
+	srand(time(NULL));
 
+	u64 mask1 = 0, mask2 = 0, mask3 = 0;
+	for (int i = 0; i < 19; ++i)
+		setBitVal(mask1, i, 1);
+	for (int i = 19; i < 19+22; ++i)
+		setBitVal(mask2, i, 1);
+	for (int i = 41; i < 64; ++i)
+		setBitVal(mask3, i, 1);
+	cout << hex << mask1 << endl;
+	cout << hex << mask2 << endl;
+	cout << hex << mask3 << endl;
 	u64 a = 0;
 	flipBitVal(a, 0);
 	cout << a << endl;
 	int totalSteps =1;
-	u64 iterTime = 1;
+	u64 iterTime = (1<<17)/99;
 	u64 diff = 0x3;
 	u64 z0 = rand_64() & 0x3;
+
+	
+
+	vector<u64> coll = getLZ0Z1withAlg3(z0, iterTime, 0x3);
+	cout << "Collect " << coll.size() << " in total\n";
+	cout << "z0=" << hex << z0 << endl;
+	for (int i = 0; i < coll.size(); ++i) {
+		A5_1_S100 check(coll[i]);
+		check.doOneStep();
+		check.doOneStep();
+		if(check.getPrefix()!=z0)
+			cout << "Prefix=" << hex << check.getPrefix() << endl;
+	}
+
+
 	while (1) {
 		
 		u64 initState = getInteralStateByStaticZ0Z1(z0);
