@@ -251,27 +251,6 @@ bool checkInternalStateByStatieZ0Z1(u64 internalState, u64 zPattern) {
 }
 
 
-vector<u64> getLZ0Z1withAlg3(u64 z0, u64 iteTime, u64 diff=0x3) {
-	//iteTime=4*2^15/99
-	set<u64> collector;
-	u64 z1 = (z0 ^ diff);	
-	for (u64 ite = 0; ite < iteTime; ++ite) {
-		u64 interalState = getInteralStateByStaticZ0Z1(z1);
-		for (int i = 0; i < DDT0x3.size(); ++i) {
-			if (checkInternalStateByStatieZ0Z1(interalState ^ DDT0x3[i].isd, z0)) {
-				collector.insert(interalState ^ DDT0x3[i].isd);
-			}
-		}		
-	}
-	vector<u64> res;
-	for (set<u64>::iterator ite = collector.begin(); ite != collector.end(); ++ite) {
-		res.push_back(*ite);
-	}	
-	return res;
-}
-
-
-
 
 struct StateAndKnown {
 
@@ -280,21 +259,29 @@ struct StateAndKnown {
 		state = st;
 		known = kn;
 	}
-	vector<int> getKnownBits() {
-		vector<int> knownBits;
+	set<int> getKnownBits() {
+		set<int> knownBits;
 		for (int i = 0; i < 64; ++i) {
 			if (bit64(known, i) == 1) {
-				knownBits.push_back(i);
+				knownBits.insert(i);
 			}
 		}
 		return knownBits;
 	}
 
-	vector<int> getKnownBitsAfterMove() {
+
+	u64 getClockBits() {
 		u64 clockBits = bit64(state, 8);
 		clockBits |= (bit64(state, 29) << 1);
 		clockBits |= (bit64(state, 51) << 2);
-		vector<int> knownBits;
+		return clockBits;
+	}
+
+	set<int> getKnownBitsAfterMove() {
+		u64 clockBits = bit64(state, 8);
+		clockBits |= (bit64(state, 29) << 1);
+		clockBits |= (bit64(state, 51) << 2);
+		set<int> knownBits;
 		switch (clockBits)
 		{
 		case 7:
@@ -303,7 +290,7 @@ struct StateAndKnown {
 				if (i == 18 || i == 40 || i == 63)
 					continue;
 				if (bit64(known, i) == 1) {
-					knownBits.push_back(i+1);
+					knownBits.insert(i+1);
 				}
 			}
 			break;
@@ -313,9 +300,9 @@ struct StateAndKnown {
 				if (i == 40 || i == 63)
 					continue;
 				if (bit64(known, i) == 1) {
-					if(i < 19 && i >= 0)knownBits.push_back(i);
+					if(i < 19 && i >= 0)knownBits.insert(i);
 					else {
-						knownBits.push_back(i + 1);
+						knownBits.insert(i + 1);
 					}
 				}
 			}
@@ -326,9 +313,9 @@ struct StateAndKnown {
 				if (i == 18 || i == 63)
 					continue;
 				if (bit64(known, i) == 1) {
-					if (i < 41 && i >= 19)knownBits.push_back(i);
+					if (i < 41 && i >= 19)knownBits.insert(i);
 					else {
-						knownBits.push_back(i + 1);
+						knownBits.insert(i + 1);
 					}
 				}
 			}
@@ -339,9 +326,9 @@ struct StateAndKnown {
 				if (i == 18 || i == 40)
 					continue;
 				if (bit64(known, i) == 1) {
-					if (i < 63 && i >= 41)knownBits.push_back(i);
+					if (i < 63 && i >= 41)knownBits.insert(i);
 					else {
-						knownBits.push_back(i + 1);
+						knownBits.insert(i + 1);
 					}
 				}
 			}
@@ -351,8 +338,8 @@ struct StateAndKnown {
 	}
 
 	//Move the current bits by a clock backward
-	vector<int> getKnownBitsBeforeMove(u64 clockBits) {
-		vector<int> knownBits;
+	set<int> getKnownBitsBeforeMove(u64 clockBits) {
+		set<int> knownBits;
 		switch (clockBits)
 		{
 		case 7:
@@ -361,7 +348,7 @@ struct StateAndKnown {
 				if (i == 0 || i == 19 || i == 41)
 					continue;
 				if (bit64(known, i) == 1) {
-					knownBits.push_back(i - 1);
+					knownBits.insert(i - 1);
 				}
 			}
 			break;
@@ -371,9 +358,9 @@ struct StateAndKnown {
 				if (i == 19 || i == 41)
 					continue;
 				if (bit64(known, i) == 1) {
-					if (i < 19 && i >= 0)knownBits.push_back(i);
+					if (i < 19 && i >= 0)knownBits.insert(i);
 					else {
-						knownBits.push_back(i - 1);
+						knownBits.insert(i - 1);
 					}
 				}
 			}
@@ -384,9 +371,9 @@ struct StateAndKnown {
 				if (i == 0 || i == 41)
 					continue;
 				if (bit64(known, i) == 1) {
-					if (i < 41 && i >= 19)knownBits.push_back(i);
+					if (i < 41 && i >= 19)knownBits.insert(i);
 					else {
-						knownBits.push_back(i - 1);
+						knownBits.insert(i - 1);
 					}
 				}
 			}
@@ -397,9 +384,9 @@ struct StateAndKnown {
 				if (i == 0 || i ==19)
 					continue;
 				if (bit64(known, i) == 1) {
-					if (i < 63 && i >= 41)knownBits.push_back(i);
+					if (i < 63 && i >= 41)knownBits.insert(i);
 					else {
-						knownBits.push_back(i - 1);
+						knownBits.insert(i - 1);
 					}
 				}
 			}
@@ -407,22 +394,121 @@ struct StateAndKnown {
 		}
 		return knownBits;
 	}
+
+
+	StateAndKnown getStateAndKnownBeforeMove(u64 clockBits) {
+		u64 r1 = (state & MASK64R1);
+		u64 r2 = (state & MASK64R2);
+		u64 r3 = (state & MASK64R3);
+		u64 k1 = (known & MASK64R1);
+		u64 k2 = (known & MASK64R2);
+		u64 k3 = (known & MASK64R3);
+		switch (clockBits)
+		{
+		case 7:
+		case 0:
+			r1 = (r1 >> 1) & MASK64R1;
+			r2 = (r2 >> 1) & MASK64R2;
+			r3 = (r3 >> 1) & MASK64R3;
+			k1 = (k1 >> 1) & MASK64R1;
+			k2 = (k2 >> 1) & MASK64R2;
+			k3 = (k3 >> 1) & MASK64R3;
+			break;
+		case 1:
+		case 6:
+			r2 = (r2 >> 1) & MASK64R2;
+			r3 = (r3 >> 1) & MASK64R3;
+			k2 = (k2 >> 1) & MASK64R2;
+			k3 = (k3 >> 1) & MASK64R3;
+			break;
+		case 2:
+		case 5:
+			r1 = (r1 >> 1) & MASK64R1;
+			r3 = (r3 >> 1) & MASK64R3;
+			k1 = (k1 >> 1) & MASK64R1;
+			k3 = (k3 >> 1) & MASK64R3;
+			break;
+		case 4:
+		case 3:
+			r1 = (r1 >> 1) & MASK64R1;
+			r2 = (r2 >> 1) & MASK64R2;
+			k1 = (k1 >> 1) & MASK64R1;
+			k2 = (k2 >> 1) & MASK64R2;
+			break;
+		}
+		return StateAndKnown((r1 | r2 | r3), (k1 | k2 | k3));
+	}
 };
 
 
-class MergeParser {
-public:
-	MergeParser(vector<u64> L = {}) {
-		for (int i = 0; i < L.size(); ++i) {
-			u64 clockBits = bit64(L[i], 8);
-			clockBits |= (bit64(L[i], 29) << 1);
-			clockBits |= (bit64(L[i], 51) << 2);
-			mapper.push_back(StateAndKnown(L[i],MASK_Z0Z1));
+/*
+vector<u64> getLZ0Z1withAlg3(u64 z0, u64 iteTime, u64 diff = 0x3) {
+	//iteTime=4*2^15/99
+	set<u64> collector;
+	u64 z1 = (z0 ^ diff);
+	for (u64 ite = 0; ite < iteTime; ++ite) {
+		u64 interalState = getInteralStateByStaticZ0Z1(z1);
+		for (int i = 0; i < DDT0x3.size(); ++i) {
+			if (checkInternalStateByStatieZ0Z1(interalState ^ DDT0x3[i].isd, z0)) {
+				collector.insert(interalState ^ DDT0x3[i].isd);
+			}
 		}
 	}
-private:
-	vector<StateAndKnown> mapper;
-};
+	vector<u64> res;
+	for (set<u64>::iterator ite = collector.begin(); ite != collector.end(); ++ite) {
+		res.push_back(*ite);
+	}
+	return res;
+}*/
+
+
+vector<StateAndKnown> getLZ0Z1withAlg3(u64 z0, u64 iteTime, u64 diff = 0x3) {
+	//iteTime=4*2^15/99
+	set<u64> collector;
+	u64 z1 = (z0 ^ diff);
+	for (u64 ite = 0; ite < iteTime; ++ite) {
+		u64 interalState = getInteralStateByStaticZ0Z1(z1);
+		for (int i = 0; i < DDT0x3.size(); ++i) {
+			if (checkInternalStateByStatieZ0Z1(interalState ^ DDT0x3[i].isd, z0)) {
+				collector.insert(interalState ^ DDT0x3[i].isd);
+			}
+		}
+	}
+	vector<StateAndKnown> res;
+	for (set<u64>::iterator ite = collector.begin(); ite != collector.end(); ++ite) {
+		res.push_back(StateAndKnown(*ite));
+	}
+	return res;
+}
+
+
+
+bool checkIntersectBits(StateAndKnown a, StateAndKnown b) {
+	u64 intersectKnownMask = (a.known & b.known);
+	if ((intersectKnownMask & a.state) == (intersectKnownMask & b.state))
+		return true;
+	else
+		return false;
+}
+
+
+vector<StateAndKnown> merge2List(vector<StateAndKnown> L0, vector<StateAndKnown> L1) {
+	vector<StateAndKnown> mergedList;
+	for (int i = 0; i < L0.size(); ++i) {
+		u64 clockBits = L0[i].getClockBits();
+		for (int j = 0; j < L1.size(); ++j) {
+			StateAndKnown back1 = L1[j].getStateAndKnownBeforeMove(clockBits);
+			if (checkIntersectBits(L0[i], back1))
+			{
+				mergedList.push_back(StateAndKnown(
+					L0[i].state | back1.state,
+					L0[i].known | back1.known
+				));
+			}
+		}
+	}
+	return mergedList;
+}
 
 
 

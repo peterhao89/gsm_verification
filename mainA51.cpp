@@ -20,107 +20,85 @@
 
 
 
-
 int main(){
 	srand(time(NULL));
-
-	u64 mask1 = 0, mask2 = 0, mask3 = 0;
-	for (int i = 0; i < 19; ++i)
-		setBitVal(mask1, i, 1);
-	for (int i = 19; i < 19+22; ++i)
-		setBitVal(mask2, i, 1);
-	for (int i = 41; i < 64; ++i)
-		setBitVal(mask3, i, 1);
-	cout << hex << mask1 << endl;
-	cout << hex << mask2 << endl;
-	cout << hex << mask3 << endl;
-	u64 a = 0;
-	flipBitVal(a, 0);
-	cout << a << endl;
-	int totalSteps =1;
+	int totalStep = 5;
+	u64 initState = rand_64();
+	A5_1_S100 correctRunner(initState);
+	for (int i = 0; i < totalStep; ++i)
+		correctRunner.doOneStep();
+	cout << "Correct internal state: " << hex << initState << endl;
+	cout <<"Correct "<<totalStep<<"-bit Prefix: "<< hex << correctRunner.getPrefix() << dec << endl;
+	u64 prefix = correctRunner.getPrefix();
 	u64 iterTime = (1<<17)/99;
 	u64 diff = 0x3;
-	u64 z0 = rand_64() & 0x3;
+	//1st level
+	vector<StateAndKnown> Lz0z1= getLZ0Z1withAlg3( prefix & 0x3, iterTime, 0x3);
+	vector<StateAndKnown> Lz1z2 = getLZ0Z1withAlg3( (prefix >> 1) & 0x3, iterTime, 0x3);
+	vector<StateAndKnown> Lz2z3 = getLZ0Z1withAlg3( (prefix >> 2) & 0x3, iterTime, 0x3);
+	vector<StateAndKnown> Lz3z4 = getLZ0Z1withAlg3( (prefix >> 3) & 0x3, iterTime, 0x3);
+
+	//2nd level
+	vector<StateAndKnown> Lz0z1z2 = merge2List(Lz0z1, Lz1z2);
+	cout <<dec<<"#Lz0z1z2="<< Lz0z1z2.size() << endl;
+	Lz0z1.clear();
+	vector<StateAndKnown> Lz1z2z3 = merge2List(Lz1z2, Lz2z3);
+	cout << dec << "#Lz1z2z3=" << Lz1z2z3.size() << endl;
+	Lz1z2.clear();
+	vector<StateAndKnown> Lz2z3z4 = merge2List(Lz2z3, Lz3z4);
+	cout << dec << "#Lz2z3z4=" << Lz2z3z4.size() << endl;
+	Lz2z3.clear();
+	Lz3z4.clear();
+
+	//3rd level
+	vector<StateAndKnown> Lz0z1z2z3 = merge2List(Lz0z1z2, Lz1z2z3);
+	cout << dec << "#Lz0z1z2z3=" << Lz0z1z2z3.size() << endl;
+	Lz0z1z2.clear();
+	vector<StateAndKnown> Lz1z2z3z4 = merge2List(Lz1z2z3, Lz2z3z4);
+	cout << dec << "#Lz1z2z3z4=" << Lz1z2z3z4.size() << endl;
+	Lz1z2z3.clear();
+	Lz2z3z4.clear();
+
+	//4th level
+	vector<StateAndKnown> Lz0z1z2z3z4 = merge2List(Lz0z1z2z3, Lz1z2z3z4);
+	cout << dec << "#Lz0z1z2z3z4=" << Lz0z1z2z3z4.size() << endl;
+	Lz0z1z2z3.clear();
+	Lz1z2z3z4.clear();
+
+
+	for (int i = 0; i < Lz0z1z2z3z4.size(); ++i) {
+		A5_1_S100 check(Lz0z1z2z3z4[i].state);
+		for (int stp = 0; stp < totalStep; ++stp)
+			check.doOneStep();
+		if (check.getPrefix() != prefix)
+			cout << "Prefix=" << hex << check.getPrefix() << endl;
+	}
+
+	for (int i = 0; i < Lz0z1z2z3z4.size(); ++i) {
+		if ((initState & Lz0z1z2z3z4[i].known) == (Lz0z1z2z3z4[i].state & Lz0z1z2z3z4[i].known)) {
+			set<int> knownBits = Lz0z1z2z3z4[i].getKnownBits();
+			cout << "Successfully recovered the internal state of with bit positions: ";
+			for (set<int>::iterator ite = knownBits.begin(); ite != knownBits.end(); ++ite) {
+				cout << dec << *ite << ",";
+			}
+			cout << dec << endl;
+			cout << "That's " << knownBits.size() << " in total!\n";
+		}
+	}
 
 	
-
-	vector<u64> coll = getLZ0Z1withAlg3(z0, iterTime, 0x3);
-	cout << "Collect " << coll.size() << " in total\n";
+	/*
+	vector<StateAndKnown> coll = getLZ0Z1withAlg3(z0, iterTime, 0x3);
+	cout <<dec<< "Collect " << coll.size() << " in total\n";
 	cout << "z0=" << hex << z0 << endl;
 	for (int i = 0; i < coll.size(); ++i) {
-		A5_1_S100 check(coll[i]);
+		A5_1_S100 check(coll[i].state);
 		check.doOneStep();
 		check.doOneStep();
 		if(check.getPrefix()!=z0)
 			cout << "Prefix=" << hex << check.getPrefix() << endl;
 	}
-
-
-	while (1) {
-		
-		u64 initState = getInteralStateByStaticZ0Z1(z0);
-		A5_1_S100 check(initState);
-		for (int step = 0; step < totalSteps; ++step) {
-			check.doOneStep();
-			if (check.getCurrentZ() != bit64(z0, step)) {
-				cout << step << ":" << "Fail!\n";
-			}
-		}
-	}
-
-
-	/*
-	while (1) {
-		u64 initState = rand_64() & maskZ0Z1;
-		vector<int> hiBits = { 18,40,63 };
-		A5_1_S100 runner(initState);
-		set<int> haveUsedBit;
-		for (int step = 0; step < totalSteps; ++step) {
-			u64 nextMove = runner.getNextMoveMask();
-			switch (nextMove)
-			{
-			case 0:
-				hiBits[0]--;
-				hiBits[1]--;
-				hiBits[2]--;
-				break;
-			case 1:
-				hiBits[1]--;
-				hiBits[2]--;
-				break;
-			case 2:
-				hiBits[0]--;
-				hiBits[2]--;
-				break;
-			case 3:
-				hiBits[0]--;
-				hiBits[1]--;
-				break;
-			}
-			runner.doOneStep();
-			
-			if (1 == (bit64(z0, step) ^ runner.getCurrentZ())) {
-				for (int j = 0; j < 3; ++j) {
-					if (haveUsedBit.find(hiBits[j]) == haveUsedBit.end()) {
-						flipBitVal(initState, hiBits[j]);
-						break;
-					}
-				}
-			}
-			for (int j = 0; j < 3; ++j)haveUsedBit.insert(hiBits[j]);
-		}
-		A5_1_S100 check(initState);
-		for (int step = 0; step < totalSteps; ++step) {
-			check.doOneStep();
-			if (check.getCurrentZ() != bit64(z0, step)) {
-				cout <<step<<":"<< "Fail!\n";
-			}
-		}
-	}
-	
 	*/
-
-
 
 
 
