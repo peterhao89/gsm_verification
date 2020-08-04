@@ -37,6 +37,11 @@ int main(){
 	vector<StateAndKnown> Lz1z2 = getLZ0Z1withAlg3( (prefix >> 1) & 0x3, iterTime, 0x3);
 	vector<StateAndKnown> Lz2z3 = getLZ0Z1withAlg3( (prefix >> 2) & 0x3, iterTime, 0x3);
 	vector<StateAndKnown> Lz3z4 = getLZ0Z1withAlg3( (prefix >> 3) & 0x3, iterTime, 0x3);
+	cout << dec << "#Lz0z1=" << Lz0z1.size() << endl;
+	cout << dec << "#Lz1z2=" << Lz1z2.size() << endl;
+	cout << dec << "#Lz2z3=" << Lz2z3.size() << endl;
+	cout << dec << "#Lz3z4=" << Lz3z4.size() << endl;
+
 
 	//2nd level
 	vector<StateAndKnown> Lz0z1z2 = merge2List(Lz0z1, Lz1z2);
@@ -73,11 +78,12 @@ int main(){
 		if (check.getPrefix() != prefix)
 			cout << "Prefix=" << hex << check.getPrefix() << endl;
 	}
-
+	bool success = false;
 	for (int i = 0; i < Lz0z1z2z3z4.size(); ++i) {
 		if ((initState & Lz0z1z2z3z4[i].known) == (Lz0z1z2z3z4[i].state & Lz0z1z2z3z4[i].known)) {
+			success = true;
 			set<int> knownBits = Lz0z1z2z3z4[i].getKnownBits();
-			cout << "Successfully recovered the internal state of with bit positions: ";
+			cout << "Successfully recovered the internal state bits at positions: ";
 			for (set<int>::iterator ite = knownBits.begin(); ite != knownBits.end(); ++ite) {
 				cout << dec << *ite << ",";
 			}
@@ -85,7 +91,8 @@ int main(){
 			cout << "That's " << knownBits.size() << " in total!\n";
 		}
 	}
-
+	if (!success)
+		cout << "Haven't recovered the internal state!\n";
 	
 	/*
 	vector<StateAndKnown> coll = getLZ0Z1withAlg3(z0, iterTime, 0x3);
