@@ -3,10 +3,10 @@
 #include<cstring>
 #include<time.h>
 #define TEST 0
-#define MERGE 0
+#define MERGE 1
 #define GEN_GUESS_TABLE 0
 #define PRACTICAL_ATTACK 0
-#define DDT_GENERATE 1
+#define DDT_GENERATE 0
 
 #if GEN_GUESS_TABLE
 #include"GuessDetermineCP.hpp"
@@ -370,68 +370,99 @@ int main() {
 
 
 #if MERGE
+#include"Merge.hpp"
 
 int main(int argc, char const* argv[]) {
-	u64 count = 0;
-	int prefixLength = 2;
-	int threadNumber = 1;
-	for (int i = 0; i < argc; i++) {
-		if (!strcmp(argv[i], "-pl")) prefixLength = atoi(argv[i + 1]);
-		if (!strcmp(argv[i], "-t")) threadNumber = atoi(argv[i + 1]);
+	srand(time(NULL));
+
+
+	int totalStep = 5;
+	u64 initState = rand_64();
+	A5_1_S100 correctRunner(initState);
+	for (int i = 0; i < totalStep; ++i)
+		correctRunner.doOneStep();
+	cout << "Correct internal state: " << hex << initState << endl;
+	cout << "Correct " << totalStep << "-bit Prefix: " << hex << correctRunner.getPrefix() << dec << endl;
+	u64 prefix = correctRunner.getPrefix();
+	u64 iterTime = (1 << 17) / 99;
+	u64 diff = 0x3;
+	int beta = 7;
+	int gamma = 2;
+
+
+
+
+
+	//1st level
+	vector<StateAndKnown> Lz0z1 = getLZ0Z1withAlg5(prefix & 0x3, iterTime, diff, beta, gamma);
+	vector<StateAndKnown> Lz1z2 = getLZ0Z1withAlg5((prefix >> 1) & 0x3, iterTime, diff, beta, gamma);
+	vector<StateAndKnown> Lz2z3 = getLZ0Z1withAlg5((prefix >> 2) & 0x3, iterTime, diff, beta, gamma);
+	vector<StateAndKnown> Lz3z4 = getLZ0Z1withAlg5((prefix >> 3) & 0x3, iterTime, diff, beta, gamma);
+	cout << dec << "#Lz0z1=" << Lz0z1.size() << endl;
+	cout << dec << "#Lz1z2=" << Lz1z2.size() << endl;
+	cout << dec << "#Lz2z3=" << Lz2z3.size() << endl;
+	cout << dec << "#Lz3z4=" << Lz3z4.size() << endl;
+
+
+	//2nd level
+	vector<StateAndKnown> Lz0z1z2 = merge2List(Lz0z1, Lz1z2);
+	cout << dec << "#Lz0z1z2=" << Lz0z1z2.size() << endl;
+	for (int i = 0; i < Lz0z1z2.size(); ++i) {
+		A5_1_S100 check(Lz0z1z2[i].state);
+		for (int r = 0; r < totalStep; ++r) {
+			check.doOneStep();
+		}
+		if ((check.getPrefix() & 0x7) != (prefix & 0x7))
+			cout << "Prefix=" << hex << check.getPrefix() << endl;
 	}
-	cout << prefixLength << endl;
-	cout << threadNumber << endl;
-	vector<int> relatedBitsOf1Output = { 18, 19 + 21, 41 + 22, 17,19 + 20, 41 + 21, 8, 19 + 10, 41 + 10 };
-	set<int> relatedBitsOf5Outputs;
-	for (int offset = 0; offset < prefixLength; ++offset) {
-		for (int i = 0; i < relatedBitsOf1Output.size(); ++i) {
-			relatedBitsOf5Outputs.insert(relatedBitsOf1Output[i]-offset);
+
+	Lz0z1.clear();
+	vector<StateAndKnown> Lz1z2z3 = merge2List(Lz1z2, Lz2z3);
+	cout << dec << "#Lz1z2z3=" << Lz1z2z3.size() << endl;
+	Lz1z2.clear();
+	vector<StateAndKnown> Lz2z3z4 = merge2List(Lz2z3, Lz3z4);
+	cout << dec << "#Lz2z3z4=" << Lz2z3z4.size() << endl;
+	Lz2z3.clear();
+	Lz3z4.clear();
+
+	//3rd level
+	vector<StateAndKnown> Lz0z1z2z3 = merge2List(Lz0z1z2, Lz1z2z3);
+	cout << dec << "#Lz0z1z2z3=" << Lz0z1z2z3.size() << endl;
+	Lz0z1z2.clear();
+	vector<StateAndKnown> Lz1z2z3z4 = merge2List(Lz1z2z3, Lz2z3z4);
+	cout << dec << "#Lz1z2z3z4=" << Lz1z2z3z4.size() << endl;
+	Lz1z2z3.clear();
+	Lz2z3z4.clear();
+
+	//4th level
+	vector<StateAndKnown> Lz0z1z2z3z4 = merge2List(Lz0z1z2z3, Lz1z2z3z4);
+	cout << dec << "#Lz0z1z2z3z4=" << Lz0z1z2z3z4.size() << endl;
+	Lz0z1z2z3.clear();
+	Lz1z2z3z4.clear();
+
+
+	for (int i = 0; i < Lz0z1z2z3z4.size(); ++i) {
+		A5_1_S100 check(Lz0z1z2z3z4[i].state);
+		for (int stp = 0; stp < totalStep; ++stp)
+			check.doOneStep();
+		if (check.getPrefix() != prefix)
+			cout << "Prefix=" << hex << check.getPrefix() << endl;
+	}
+	bool success = false;
+	for (int i = 0; i < Lz0z1z2z3z4.size(); ++i) {
+		if ((initState & Lz0z1z2z3z4[i].known) == (Lz0z1z2z3z4[i].state & Lz0z1z2z3z4[i].known)) {
+			success = true;
+			set<int> knownBits = Lz0z1z2z3z4[i].getKnownBits();
+			cout << "Successfully recovered the internal state bits at positions: ";
+			for (set<int>::iterator ite = knownBits.begin(); ite != knownBits.end(); ++ite) {
+				cout << dec << *ite << ",";
+			}
+			cout << dec << endl;
+			cout << "That's " << knownBits.size() << " in total!\n";
 		}
 	}
-	vector<int> involvedBits;
-	for (set<int>::iterator ite = relatedBitsOf5Outputs.begin(); ite != relatedBitsOf5Outputs.end(); ++ite) {
-		involvedBits.push_back(*ite);
-	}
-	int involvedBitNumber = involvedBits.size();
-	u64 total = 1;
-	total <<= involvedBitNumber;
-	omp_set_num_threads(6);	
-#pragma omp parallel for 
-	for (int prefix = 0; prefix < (1 << prefixLength); prefix++) {
-		u64 pattern = prefix;
-		set<u64> Lz0_z4;
-		vector<u64> patternBits;
-		for (int i = 0; i < prefixLength; ++i) {
-			patternBits.push_back(bit64(pattern, i));
-		}
-		A5_1_S100 runner(0);
-		u64 iniState = 0;
-		bool satisfyPattern = true;
-		for (count = 0; count < total; ++count) {
-			iniState = 0;
-			satisfyPattern = true;
-			for (int loop = 0; loop < involvedBits.size(); ++loop) {
-				setBitVal(iniState, involvedBits[loop], bit64(count, loop));
-			}
-			runner.update(iniState);
-			for (int i = 0; i < prefixLength; ++i) {
-				if (runner.output() != patternBits[i]) {
-					satisfyPattern = false;
-					break;
-				}
-			}
-			if (satisfyPattern) {
-				Lz0_z4.insert(iniState);
-			}
-		}
-		ofstream file1;
-		file1.open("L"+to_string(prefixLength)+"prefix"+ to_string(prefix)+".txt");
-		file1 << hex << "prefix=" << pattern << endl;
-		file1 << dec << "The merged list L has #L=" << Lz0_z4.size() << endl;
-		file1.close();
-		cout << hex << "prefix=" << pattern << endl;
-		cout << dec << "The merged list L has #L=" << Lz0_z4.size() << endl;
-	}
+	if (!success)
+		cout << "Haven't recovered the internal state!\n";
 	return 0;
 }
 #endif
