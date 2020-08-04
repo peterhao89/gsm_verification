@@ -22,6 +22,8 @@
 
 int main(){
 	srand(time(NULL));
+
+
 	int totalStep = 5;
 	u64 initState = rand_64();
 	A5_1_S100 correctRunner(initState);
@@ -32,11 +34,18 @@ int main(){
 	u64 prefix = correctRunner.getPrefix();
 	u64 iterTime = (1<<17)/99;
 	u64 diff = 0x3;
+	int beta = 7;
+	int gamma = 2;
+
+	
+
+
+
 	//1st level
-	vector<StateAndKnown> Lz0z1= getLZ0Z1withAlg3( prefix & 0x3, iterTime, 0x3);
-	vector<StateAndKnown> Lz1z2 = getLZ0Z1withAlg3( (prefix >> 1) & 0x3, iterTime, 0x3);
-	vector<StateAndKnown> Lz2z3 = getLZ0Z1withAlg3( (prefix >> 2) & 0x3, iterTime, 0x3);
-	vector<StateAndKnown> Lz3z4 = getLZ0Z1withAlg3( (prefix >> 3) & 0x3, iterTime, 0x3);
+	vector<StateAndKnown> Lz0z1= getLZ0Z1withAlg5( prefix & 0x3, iterTime, diff, beta, gamma);
+	vector<StateAndKnown> Lz1z2 = getLZ0Z1withAlg5( (prefix >> 1) & 0x3, iterTime, diff, beta, gamma);
+	vector<StateAndKnown> Lz2z3 = getLZ0Z1withAlg5( (prefix >> 2) & 0x3, iterTime, diff, beta, gamma);
+	vector<StateAndKnown> Lz3z4 = getLZ0Z1withAlg5( (prefix >> 3) & 0x3, iterTime, diff, beta, gamma);
 	cout << dec << "#Lz0z1=" << Lz0z1.size() << endl;
 	cout << dec << "#Lz1z2=" << Lz1z2.size() << endl;
 	cout << dec << "#Lz2z3=" << Lz2z3.size() << endl;
@@ -46,6 +55,15 @@ int main(){
 	//2nd level
 	vector<StateAndKnown> Lz0z1z2 = merge2List(Lz0z1, Lz1z2);
 	cout <<dec<<"#Lz0z1z2="<< Lz0z1z2.size() << endl;
+	for (int i = 0; i < Lz0z1z2.size(); ++i) {
+		A5_1_S100 check(Lz0z1z2[i].state);
+		for (int r = 0; r < totalStep; ++r) {
+			check.doOneStep();
+		}
+		if ((check.getPrefix()&0x7) != (prefix&0x7))
+			cout << "Prefix=" << hex << check.getPrefix() << endl;
+	}
+
 	Lz0z1.clear();
 	vector<StateAndKnown> Lz1z2z3 = merge2List(Lz1z2, Lz2z3);
 	cout << dec << "#Lz1z2z3=" << Lz1z2z3.size() << endl;

@@ -259,6 +259,34 @@ struct StateAndKnown {
 		state = st;
 		known = kn;
 	}
+	bool operator == ( const StateAndKnown& b) const{
+		return (this->known == b.known && this->state == b.state);
+	}
+	bool operator != (const StateAndKnown& b) const {
+		return !(*this==b);
+	}
+	bool operator < (const StateAndKnown& b) const {
+		if (this->state < b.state)
+			return true;
+		else if (this->state > b.state)
+			return false;
+		else if (this->state == b.state && this->known < b.known)
+			return true;
+		else
+			return false;
+	}
+	bool operator > (const StateAndKnown& b) const {
+		return !(*this < b);
+	}
+
+	bool operator >= (const StateAndKnown& b) const {
+		return (*this > b || *this==b);
+	}
+
+	bool operator <= (const StateAndKnown& b) const {
+		return (*this < b || *this == b);
+	}
+
 	set<int> getKnownBits() {
 		set<int> knownBits;
 		for (int i = 0; i < 64; ++i) {
@@ -462,7 +490,7 @@ vector<u64> getLZ0Z1withAlg3(u64 z0, u64 iteTime, u64 diff = 0x3) {
 }*/
 
 
-vector<StateAndKnown> getLZ0Z1withAlg3(u64 z0, u64 iteTime, u64 diff = 0x3) {
+set<StateAndKnown> getLZ0Z1withAlg3(u64 z0, u64 iteTime, u64 diff = 0x3) {
 	//iteTime=4*2^15/99
 	set<u64> collector;
 	u64 z1 = (z0 ^ diff);
@@ -474,11 +502,48 @@ vector<StateAndKnown> getLZ0Z1withAlg3(u64 z0, u64 iteTime, u64 diff = 0x3) {
 			}
 		}
 	}
-	vector<StateAndKnown> res;
+	set<StateAndKnown> res;
 	for (set<u64>::iterator ite = collector.begin(); ite != collector.end(); ++ite) {
-		res.push_back(StateAndKnown(*ite));
+		res.insert(StateAndKnown(*ite));
 	}
 	return res;
+}
+
+set<StateAndKnown> getLZ0Z1withAlg4(u64 z0, u64 iteTime, u64 diff = 0x3, int beta = 6) {
+	set<StateAndKnown> initSet = getLZ0Z1withAlg3(z0, iteTime, diff);
+	vector<StateAndKnown> collector;
+	for (int i = 0; i < beta-1; ++i) {
+		collector.clear();
+		set<StateAndKnown> tmpSet=initSet;
+		set<StateAndKnown> tmpSet1 = getLZ0Z1withAlg3(z0, iteTime, diff);
+		set_intersection(tmpSet.begin(), tmpSet.end(), tmpSet1.begin(), tmpSet1.end(), back_inserter(collector));
+		initSet.clear();
+		for (int j = 0; j < collector.size(); ++j) {
+			initSet.insert(collector[j]);
+		}
+	}
+	//cout << "#Intersection=" << initSet.size() << endl;
+	return initSet;
+}
+
+vector<StateAndKnown> getLZ0Z1withAlg5(u64 z0, u64 iteTime, u64 diff = 0x3, int beta = 6, int gamma=2) {
+	set<StateAndKnown> initSet = getLZ0Z1withAlg4(z0, iteTime, diff,beta);
+	vector<StateAndKnown> collector;
+	for (int i = 0; i < gamma-1; ++i) {
+		collector.clear();
+		set<StateAndKnown> tmpSet = initSet;
+		set<StateAndKnown> tmpSet1 = getLZ0Z1withAlg4(z0, iteTime, diff, beta);
+		set_union(tmpSet.begin(), tmpSet.end(), tmpSet1.begin(), tmpSet1.end(), back_inserter(collector));
+		initSet.clear();
+		for (int j = 0; j < collector.size(); ++j) {
+			initSet.insert(collector[j]);
+		}
+	}
+	collector.clear();
+	for (set<StateAndKnown>::iterator ite = initSet.begin(); ite != initSet.end(); ++ite) {
+		collector.push_back(*ite);
+	}
+	return collector;
 }
 
 
