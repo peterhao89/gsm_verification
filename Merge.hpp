@@ -509,6 +509,35 @@ set<StateAndKnown> getLZ0Z1withAlg3(u64 z0, u64 iteTime, u64 diff = 0x3) {
 	return res;
 }
 
+double getP1OfAlg3(int testTime, u64 iteTime, u64 diff = 0x3) {
+	int count = 0;
+	int coverCount = 0;
+	do {
+		count++;
+		u64 initState = rand_64() & MASK_Z0Z1;
+		A5_1_S100 runner(initState);
+		for (int i = 0; i < 2; ++i)runner.doOneStep();
+		set<u64> collector;
+		u64 prefix = runner.getPrefix() & 0x3;
+		u64 z1 = prefix ^ diff;
+		for (u64 ite = 0; ite < iteTime; ++ite) {
+			u64 interalState = getInteralStateByStaticZ0Z1(z1);
+			for (int i = 0; i < DDT0x3.size(); ++i) {
+				if (checkInternalStateByStatieZ0Z1(interalState ^ DDT0x3[i].isd, z0)) {
+					collector.insert(interalState ^ DDT0x3[i].isd);
+				}
+			}
+		}
+		if (collector.find(initState) != collector.end()) {
+			coverCount++;
+		}
+	} while (count < testTime);
+	cout << "Covered: " << dec << coverCount << endl;
+	cout << "Total: " << dec << count << endl;
+	cout << "Percent: " << dec << double(coverCount) / count << endl;
+	return double(coverCount) / count;
+}
+
 set<StateAndKnown> getLZ0Z1withAlg4(u64 z0, u64 iteTime, u64 diff = 0x3, int beta = 6) {
 	set<StateAndKnown> initSet = getLZ0Z1withAlg3(z0, iteTime, diff);
 	vector<StateAndKnown> collector;

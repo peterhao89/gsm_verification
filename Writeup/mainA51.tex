@@ -29,8 +29,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   Abstract   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-We propose a series of state-recovery attacks on A5/1 with negligible memory complexities. 
-The time complexity can be as low as $2^{43.91}$ and the data complexity is only 32 bits.  
+We propose a series of state-recovery attacks on A5/1 with negligible memory complexities.
+The time complexity can be as low as $2^{43.91}$ and the data complexity is only 32 bits.
 \keywords{stream ciphers, A5/1, guess-and-determine}
 \end{abstract}
 
@@ -235,13 +235,13 @@ With $\alpha ,\beta $, the averaging time complexity can be computed as e
 \end{equation}
 We randomly select $2^{30}$ $((m^0,\ldots, m^t), (z^0,\ldots, z^m))$ pairs and do the 3.(b) test to compute the averaging $\alpha_t$ and $\beta_t$ for $t$'s.
 We find that when $t<14$, $\alpha \approx 1$ and $\beta\leq 3t$ so the overall complexity is constantly larger than $2^{64-t}\geq 2^{51}$.
-For $14\leq t\leq 29$, the $\alpha$, $\beta_t$ and $Comp$ are listed in Table \ref{tab:AlphaAndBeta}. 
-As can be seen, the lowest complexity appears at $t=21$ with $Comp=2^{43.91}$. 
-The memory complexity is only $\mathcal{BC}$ and the corresponding matrix $A$ as well as its extended matrix $E$ in \eqref{eq:BCLpSystem} and \eqref{eq:ExtendedMatrixOfA}. 
-The memory complexity is only $O(t)$. 
-As can be seen in Table \ref{tab:AlphaAndBeta}, the order $\beta$ has already climbed to almost 64 for $t=27$. 
-So we can safely set $\ell=32$ to filter the wrong movement guesses. 
-According to our experiment, $\ell=32$ is well enough to identify the correct $\vec{s^0}$. 
+For $14\leq t\leq 29$, the $\alpha$, $\beta_t$ and $Comp$ are listed in Table \ref{tab:AlphaAndBeta}.
+As can be seen, the lowest complexity appears at $t=21$ with $Comp=2^{43.91}$.
+The memory complexity is only $\mathcal{BC}$ and the corresponding matrix $A$ as well as its extended matrix $E$ in \eqref{eq:BCLpSystem} and \eqref{eq:ExtendedMatrixOfA}.
+The memory complexity is only $O(t)$.
+As can be seen in Table \ref{tab:AlphaAndBeta}, the order $\beta$ has already climbed to almost 64 for $t=27$.
+So we can safely set $\ell=32$ to filter the wrong movement guesses.
+According to our experiment, $\ell=32$ is well enough to identify the correct $\vec{s^0}$.
 
 
 
@@ -250,7 +250,7 @@ According to our experiment, $\ell=32$ is well enough to identify the correct $\
   \caption{The averaging $\alpha_t$ and $\beta_t$ in \eqref{eq:Complexity} with $2^{30}$ random tests}\label{tab:AlphaAndBeta}
     \begin{tabular}{|l|l|l|l|l|l|l|l|}
     \hline
-    \multicolumn{1}{|c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\alpha$} & \multicolumn{1}{c|}{$Comp$} & \multicolumn{1}{c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\alpha$} & \multicolumn{1}{c|}{$Comp$} \\
+    \multicolumn{1}{|c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\alpha$} & \multicolumn{1}{c|}{$\log Comp$} & \multicolumn{1}{c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\alpha$} & \multicolumn{1}{c|}{$\log Comp$} \\
     \hline
 
     14    & 41.95852 & -0.02809 & 50.01338 & 22    & 61.60404 & -3.97115 & 44.41749 \\
@@ -346,12 +346,22 @@ According to our experiment, $\ell=32$ is well enough to identify the correct $\
 \State Update $\mathcal{BC}$ by adding the following bit condition corresponding to \eqref{eq:OutputBitCondition}
 \[
 (W^{i+1}[18]\oplus W^{i+1}[40]\oplus W^{i+1}[63])\cdot \vec x =z^i
-\] 
+\]
 \EndFor
 \State Return $\mathcal{BC}$
 		\EndProcedure
 	\end{algorithmic}
 \end{algorithm}
+
+
+\section{Revisit Zhang's Attack in \cite{AC:Zhang19}}
+Zhang's attack in \cite{AC:Zhang19} claim to have a practical complexity but they only implemented the very 1st stage of their attack leaving it unknown whether the whole attack can work as claimed. 
+To verify their attack, we fully implement their attack only to find several mistakes and the complexity evaluation to the whole attack is far too optimistic. 
+\subsection{The Probability $p_1$}
+
+
+
+
 \section{Conclusion}
 
 

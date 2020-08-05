@@ -373,7 +373,9 @@ int main() {
 #include"Merge.hpp"
 
 int main(int argc, char const* argv[]) {
-	srand(time(NULL));
+	srand_64(time(NULL));
+	for (int i = 0; i < 100; ++i)
+		cout << hex << rand_64() << endl;
 
 
 	int totalStep = 5;
@@ -386,7 +388,7 @@ int main(int argc, char const* argv[]) {
 	u64 prefix = correctRunner.getPrefix();
 	u64 iterTime = (1 << 17) / 99;
 	u64 diff = 0x3;
-	int beta = 7;
+	int beta = 6;
 	int gamma = 2;
 
 
