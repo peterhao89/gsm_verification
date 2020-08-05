@@ -523,7 +523,7 @@ double getP1OfAlg3(int testTime, u64 iteTime, u64 diff = 0x3) {
 		for (u64 ite = 0; ite < iteTime; ++ite) {
 			u64 interalState = getInteralStateByStaticZ0Z1(z1);
 			for (int i = 0; i < DDT0x3.size(); ++i) {
-				if (checkInternalStateByStatieZ0Z1(interalState ^ DDT0x3[i].isd, z0)) {
+				if (checkInternalStateByStatieZ0Z1(interalState ^ DDT0x3[i].isd, prefix)) {
 					collector.insert(interalState ^ DDT0x3[i].isd);
 				}
 			}
