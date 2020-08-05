@@ -170,7 +170,7 @@ The 4 movements are denoted as Move 0-4 as follows:
 We denote the movement $\vec{s}^t\rightarrow \vec{s}^{t+1}$ as $m^t\in \mathbb{F}_2^2= \{0,1,2,3\}$.
 So the movements corresponding to the output keystream bits $z^0,\ldots, z^t$ are $m^0,\ldots, m^t$.
 
-\section{Move Guesses and Bit Condition Deductions}
+\section{Move Guesses and Bit Condition Deductions}\label{sec:OurGuessAndDetermine}
 In our guess and determine attack, for $t=0,1,...$, we first guess the movement corresponding to $\vec{s}^t\rightarrow \vec{s}^{t+1}$ and maintains a bit condition set $\mathcal{B}$ by adding new bit conditions corresponding to the new movement and the output $z^t$.
 For each step $t$, there are 3 bit conditions: 2 are from one of \eqref{eq:Move0BitCondition}, \eqref{eq:Move1BitCondition}, \eqref{eq:Move2BitCondition}, \eqref{eq:Move3BitCondition} according to the move guess and the rest is from the output $z^t$ as
 \begin{equation}\label{eq:OutputBitCondition}
@@ -234,7 +234,7 @@ With $\alpha ,\beta $, the averaging time complexity can be computed as e
 \begin{equation}\label{eq:Complexity}
   Comp=2^{2t}+\alpha \cdot 2^{2t+64-\beta }=2^{2t}+2^{2t+64-\beta +\log\alpha }
 \end{equation}
-We randomly select $2^{30}$ $((m^0,\ldots, m^t), (z^0,\ldots, z^m))$ pairs and do the 3.(b) test to compute the averaging $\alpha_t$ and $\beta_t$ for $t$'s.
+We randomly select $2^{30}$ $((m^0,\ldots, m^t), (z^0,\ldots, z^m))$ pairs and do the 3.(b) test to compute the averaging $\alpha$ and $\beta$ for $t$'s.
 We find that when $t<14$, $\alpha \approx 1$ and $\beta\leq 3t$ so the overall complexity is constantly larger than $2^{64-t}\geq 2^{51}$.
 For $14\leq t\leq 29$, the $\alpha$, $\beta_t$ and $Comp$ are listed in Table \ref{tab:AlphaAndBeta}.
 As can be seen, the lowest complexity appears at $t=21$ with $Comp=2^{43.91}$.
@@ -336,10 +336,10 @@ According to our experiment, $\ell=32$ is well enough to identify the correct $\
 \State Update $\mathcal{BC}$ by adding the following conditions corresponding to \eqref{eq:Move0BitCondition}, \eqref{eq:Move1BitCondition}, \eqref{eq:Move2BitCondition}, \eqref{eq:Move3BitCondition}:
 \[
 \left\{
-\begin{split}
+\begin{aligned}
 (W^i[8]\oplus W^t[29])\cdot \vec x&=0,1,1,0\\
 (W^i[8]\oplus W^t[51])\cdot \vec x&=0,1,0,1
-\end{split}
+\end{aligned}
 \right.
 \]
 \EndIf
@@ -418,7 +418,7 @@ They simply gives three claims as follows:
 \begin{description}
   \item[Claim 1] The whole merging process in Fig. \ref{fig:MergeZhang} requires $2^{28.3}$ cipher ticks.
   \item[Claim 2] The final $L_{z_0z_1z_2z_3z_4}$ contains $2^{16.6}$ candidates.
-  \item[Claim 3] The elements in the lists requires at most 5 bytes of memory.
+  \item[Claim 3] The elements in the lists require at most 5 bytes of memory.
   \item[Claim 4] Each candidate in $L_{z_0z_1z_2z_3z_4}$ have 33 known bits.
 \end{description}
 Our practical implementation of the full attack proves that all the claims above are wrong.
@@ -459,12 +459,6 @@ At Level 1, since all list are generated through Alg3, all elements share the sa
 \end{equation}
 But the following Example \ref{examp:DifferentMoveKnownBits} shows that different moves will result in different known bit positions. 
 Example \ref{examp:DifferentMoveKnownBits} indicates that the known bits of the merged partial state $\vec{\tilde{s}^t}$ may not be exactly the 21 bits given in \cite{AC:Zhang19}: they are also likely to be subsets of the 21 bits.
-In order to keep merging the lists in Level 2-4, $\tilde{\lambda}$ containing the known bit positions should also be stored taking the same size of the partial states. 
-Since the lists in Level 4 contain partial states of 33 bits, the $\tilde{\lambda}$'s are of the same size of 33 bits. 
-So the elements in the lists requires at most $\lceil 2\cdot 33/8\rceil=9$ bytes: Zhang \etal's Claim 3 is wrong. 
-Same with Example \ref{examp:DifferentMoveKnownBits}, the $\tilde{\lambda}$ for $\vec{\tilde{s^t}}\in L_{z_0z_1z_2z_3z_4}$ are more likely to be subsets of the 33 bits: Claim 4 of Zhang \etal is wrong. 
-In fact, according to our experiments, the number of known bits of $L_{z_0z_1z_2z_3z_4}$ elements are usually 27, which is far below 33. 
-
 \begin{example}\label{examp:DifferentMoveKnownBits}
   Let $(\vec{s^0},\vec{s^1})\in L_{z_0z_1}\times L_{z_1z_2}$.
   We have $\lambda_0=\lambda$ in \eqref{eq:KnownBitsL1}.
@@ -479,10 +473,54 @@ In fact, according to our experiments, the number of known bits of $L_{z_0z_1z_2
   \]
     and $|\tilde{\lambda}|=19$.
 \end{example}
+In order to keep merging the lists in Level 2-4, $\tilde{\lambda}$ containing the known bit positions should also be stored taking the same size of the partial states.
+Since the lists in Level 4 contain partial states of 33 bits, the $\tilde{\lambda}$'s are of the same size of 33 bits.
+So the elements in the lists requires at most $\lceil 2\cdot 33/8\rceil=9$ bytes: Zhang \etal's Claim 3 is wrong.
+Same with Example \ref{examp:DifferentMoveKnownBits}, the $\tilde{\lambda}$ for $\vec{\tilde{s^t}}\in L_{z_0z_1z_2z_3z_4}$ are more likely to be subsets of the 33 bits: Claim 4 of Zhang \etal is wrong.
+In fact, according to our experiments, the number of known bits of $L_{z_0z_1z_2z_3z_4}$ elements are usually 27, which is far below 33.
+
 \subsection{The Corrected Complexities of Zhang \etal's Attack}
+According to Zhang \etal in \cite{AC:Zhang19}, after the CP part in $L_{z_0z_1z_2z_3z_4}$ are recovered, the rest parts are to be recovered in the same manner as our guess-and-determine attack in Section \ref{sec:OurGuessAndDetermine}: we guess $t=1,2,...$ moves and maintain a bit condition system in \eqref{eq:BCLpSystem} to identify the correct state. 
+As have been analyzed in the previous section, each  $L_{z_0z_1z_2z_3z_4}$ element contains about 27 bits of information. 
+From the bit condition perspective in Section \ref{sec:OurGuessAndDetermine}, this is equivalent to 27 bit conditions. 
+Since each move guess corresponds to 3 bit conditions, 27 bit conditions correspond to $t=9$ move guesses. 
+Therefore, the previous Table \ref{tab:Example1} are to be rewritten as Table \ref{tab:Example2}. 
+After guess $t$ moves, corresponding to $2t$ bits, there are $\alpha \cdot \alpha \cdot 2^{24.21+2t}$ states to be checked by exhausting the remaining $64-\beta$ bits. 
+So the overall complexity of the whole attack in \cite{AC:Zhang19} can be computed as \eqref{eq:ZhangComplexityCorrect}.
+\begin{equation}\label{eq:ZhangComplexityCorrect}  
+Comp=2^{41}+2^{24.21+2t}+\alpha \cdot 2^{24.21+2t+64-\beta}
+\end{equation}
+The exact complexities for different $t$ parameters can also be seen in Table \ref{tab:Example2}. 
 
 
+\begin{table}[htbp]
+  \centering
+  \caption{The averaging $\alpha_t$ and $\beta_t$ in \eqref{eq:Complexity} with $2^{30}$ random tests}\label{tab:AlphaAndBeta}
+    \begin{tabular}{|l|l|l|l|l|l|l|l|}
+    \hline
+    \multicolumn{1}{|c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\alpha$} & \multicolumn{1}{c|}{$\log Comp$} & \multicolumn{1}{c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\alpha$} & \multicolumn{1}{c|}{$\log Comp$} \\
+    \hline
 
+    5    & 41.95852 & -0.02809 & 50.01338 & 22    & 61.60404 & -3.97115 & 44.41749 \\
+    \hline
+    6    & 44.86764 & -0.09501 & 49.03736 & 23    & 62.78097 & -5.91544 & 46.0546 \\
+    \hline
+    7    & 47.68339 & -0.23144 & 48.08519 & 24    & 63.43321 & -8.4195 & 48.00623 \\
+    \hline
+    8    & 50.38127 & -0.46833 & 47.15056 & 25    & 63.75542 & -11.173 & 50.00074 \\
+    \hline
+    9    & 52.95498 & -0.81293 & 46.23329 & 26    & 63.9043 & -14.0599 & 52.00009 \\
+    \hline
+    10    & 55.4087 & -1.26981 & 45.33048 & 27    & 63.96694 & -17.0267 & 54.00001 \\
+    \hline
+    20    & 57.73363 & -1.85176 & 44.48072 & 28    & 63.98999 & -20.0213 & 56 \\
+    \hline
+    21    & 59.86026 & -2.67122 & \textbf{43.91356} & 29    & 63.99728 & -23.1174 & 58 \\
+    \hline
+
+    \end{tabular}%
+  \label{tab:Example2}%
+\end{table}%
 
 
 
