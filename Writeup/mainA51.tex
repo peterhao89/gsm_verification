@@ -87,14 +87,14 @@ Then, the output keystream bit $z^t$ is generated as
 \begin{equation}\label{eq:OutputZ}
   z^t=\vec{r_1^{t+1}}   [18]\oplus \vec{r_2^{t+1}}[21]\oplus \vec{r_3^{t+1}}[22]
 \end{equation}
-\section{Move Patterns and Their Bit Condition Representations}
+\section{Move Patterns and Their Bit Condition Representations}\label{sec:MovePatternAndBC}
 For each step $t=0,1,2\ldots$, whether the registers $\vec{r_1},\vec{r_2},\vec{r_3}$ are updated or not depends on the three control bits $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$.
 For all $2^3$ $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ values of, there are 4 possible movements.
 Each movement corresponds to 2 $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ values and can also be represented as linear equations of state bits, also referred as bit conditions.
 The 4 movements are denoted as Move 0-4 as follows:
 \begin{description}
   \item[Move 0] $\tt{updateR1}$, $\tt{updateR2}$ and $\tt{updateR3}$ are all called.
-  The corresponding $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ values are $(0,0,0)$ and $(1,1,1)$.
+  The corresponding $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ (or equivalently $(\vec{s^t}[8],\vec{s^t}[29],\vec{r_3^t}[51])$) values are $(0,0,0)$ and $(1,1,1)$.
   The bit conditions are:
   \begin{equation}\label{eq:Move0BitCondition}
     \left\{
@@ -111,8 +111,8 @@ The 4 movements are denoted as Move 0-4 as follows:
     \end{aligned}
     \right.
   \end{equation}
-  \item[Move 1] Only $\tt{updateR2}$ and $\tt{updateR3}$ are called. ($(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])\in \{(0,1,1),(1,0,0)\}$)
-  The corresponding $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ values are $(0,1,1)$ and $(1,0,0)$.
+  \item[Move 1] Only $\tt{updateR2}$ and $\tt{updateR3}$ are called.
+  The corresponding $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ (or equivalently $(\vec{s^t}[8],\vec{s^t}[29],\vec{r_3^t}[51])$) values are $(0,1,1)$ and $(1,0,0)$.
   The bit conditions are:
   \begin{equation}\label{eq:Move1BitCondition}
     \left\{
@@ -129,8 +129,8 @@ The 4 movements are denoted as Move 0-4 as follows:
     \end{aligned}
     \right.
   \end{equation}
-  \item[Move 2] Only $\tt{updateR1}$ and $\tt{updateR3}$ are called. ($(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])\in \{(0,1,1),(1,0,0)\}$)
-  The corresponding $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ values are $(1,0,1)$ and $(0,1,0)$.
+  \item[Move 2] Only $\tt{updateR1}$ and $\tt{updateR3}$ are called. %($(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])=(\vec{s^t}[8],\vec{s^t}[29],\vec{r_3^t}[51])\in \{(0,1,1),(1,0,0)\}$)
+  The corresponding $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ (or equivalently $(\vec{s^t}[8],\vec{s^t}[29],\vec{r_3^t}[51])$) values are $(1,0,1)$ and $(0,1,0)$.
   The bit conditions are:
   \begin{equation}\label{eq:Move2BitCondition}
     \left\{
@@ -147,8 +147,9 @@ The 4 movements are denoted as Move 0-4 as follows:
     \end{aligned}
     \right.
   \end{equation}
-  \item[Move 3] Only $\tt{updateR1}$ and $\tt{updateR2}$ are called. ($(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])\in \{(0,1,1),(1,0,0)\}$)
-  The corresponding $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ values are $(1,1,0)$ and $(0,0,1)$.
+  \item[Move 3] Only $\tt{updateR1}$ and $\tt{updateR2}$ are called.
+  %($(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])\in \{(0,1,1),(1,0,0)\}$)
+  The corresponding $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ (or equivalently $(\vec{s^t}[8],\vec{s^t}[29],\vec{r_3^t}[51])$) values are $(1,1,0)$ and $(0,0,1)$.
   The bit conditions are:
   \begin{equation}\label{eq:Move3BitCondition}
     \left\{
@@ -355,16 +356,16 @@ According to our experiment, $\ell=32$ is well enough to identify the correct $\
 
 
 \section{Revisit Zhang's Attack in \cite{AC:Zhang19}}
-Zhang's attack in \cite{AC:Zhang19} claim to have a practical complexity but they only implemented the very 1st stage of their attack leaving it unknown whether the whole attack can work as claimed.
+Zhang \etal's attack in \cite{AC:Zhang19} claim to have a practical complexity but they only implemented the very 1st stage of their attack leaving it unknown whether the whole attack can work as claimed.
 To verify their attack, we fully implement their attack only to find several mistakes and the complexity evaluation to the whole attack is far too optimistic.
 \subsection{Zhang's Wrong Evaluation to $p_1$ and the Success Probability}
 In \cite{AC:Zhang19}, they claim that for a randomly constructed list $L_{z_0z_1}$ of size $4\cdot 2^{15}/99=7963$, the correct internal state can be covered with probability $0.9835$.
-However, we repeat the experiment $10^6$ times and the correct init state lies in $L_{z_0z_1}$ for only 971842 times.
-So it is safe for us to claim that the actual $p_1$ is $0.9718$: Zhang's evaluation in \cite{AC:Zhang19} is far too optimistic.
+However, we repeat the experiment $10^6$ times and the correct init state lies in $L_{z_0z_1}$ for only 972436 times.
+So it is safe for us to claim that the actual $p_1$ is $0.9725$: Zhang's evaluation in \cite{AC:Zhang19} is far too optimistic.
 The reason why Zhang made such a mistake is unknown.
 Maybe he used RC4 as the source of randomness which is not so qualified.
 Our experiments have tried various random generators including Snow-V, AES, the NSF standard random number generator etc.
-All these experiments reveal that the actual $p_1$ is 0.9718 rather than 0.9835: Zhang's evaluation in \cite{AC:Zhang19} is wrong.
+All these experiments reveal that the actual $p_1$ is 0.9725 rather than 0.9835: Zhang's evaluation in \cite{AC:Zhang19} is wrong.
 
 With the corrected $p_1$, the probabilities for the output sets of Alg5 to cover the correct internal state should be reevaluated as well as shown in Table \ref{tab:ProbInU}.
 Since the attack can only success when the correct internal state lies in $U$, so the parameter ${\tt Prob.}$ in Table \ref{tab:ProbInU} is actually the success probability to the whole attack.
@@ -379,10 +380,10 @@ Therefore, the success probability of Zhang's attack is far too optimistic as we
     $\gamma$ & $\beta$ & $|U|$ & {\tt Prob.} \\
     \hline
     \hline
-    2     & 3     & 8109  & 0.9932 \\
-    2     & 4     & 8050  & 0.9883 \\
-    2     & 5     & 8009  & 0.9822 \\
-    2     & 6     & 7948  & 0.9751 \\
+    2     & 3     & 8109  & 0.9935 \\
+    2     & 4     & 8050  & 0.9887 \\
+    2     & 5     & 8009  & 0.9830 \\
+    2     & 6     & 7948  & 0.9761 \\
     \hline
     \end{tabular}%
   \end{minipage}
@@ -404,17 +405,83 @@ Therefore, the success probability of Zhang's attack is far too optimistic as we
 \end{table}%
 
 \subsection{Zhang's Wrong Evaluation to the Complexities}
-The main process of Zhang's attack in \cite{AC:Zhang19} can be summarized as Fig. \ref{fig:MergeZhang}. 
-The 4 lists $L_{z_0z_1},\ldots, L_{z_3z_4}$ are generated by Alg.5 and are of sizes 7835 according to \cite{AC:Zhang19} (such sizes are to be corrected to 7948 according to our experiments in Table \ref{tab:ProbInU}). 
-Zhang has not fully implement their attack. 
-\cite{AC:Zhang19} only contains the evaluation to the process from Level 1 to 2. 
-
-
-\begin{figure}
+The main process of Zhang's attack in \cite{AC:Zhang19} can be summarized as Fig. \ref{fig:MergeZhang}.
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=0.5\textwidth]{pic/MergeZhang.pdf}
   \caption{The general process of Zhang's attack in \cite{AC:Zhang19}}\label{fig:MergeZhang}
 \end{figure}
+The 4 lists $L_{z_0z_1},\ldots, L_{z_3z_4}$ are generated by Alg.5 and are of sizes 7835 according to \cite{AC:Zhang19} (such sizes are to be corrected to 7948 according to our experiments in Table \ref{tab:ProbInU}).
+Zhang has not fully implement their attack.
+\cite{AC:Zhang19} only implement the steps from Level 1 to 2.
+They simply gives three claims as follows:
+\begin{description}
+  \item[Claim 1] The whole merging process in Fig. \ref{fig:MergeZhang} requires $2^{28.3}$ cipher ticks.
+  \item[Claim 2] The final $L_{z_0z_1z_2z_3z_4}$ contains $2^{16.6}$ candidates.
+  \item[Claim 3] The elements in the lists requires at most 5 bytes of memory.
+  \item[Claim 4] Each candidate in $L_{z_0z_1z_2z_3z_4}$ have 33 known bits.
+\end{description}
+Our practical implementation of the full attack proves that all the claims above are wrong.
+
+Since the merging of two lists $L_1,L_2$ requires $|L_1|\cdot |L_2|$ operations, it is impossible to get exact evaluation to the complexities without actually knowing the sizes of all the lists.
+According to our implementation, the sizes of the lists are as follows:
+\begin{equation}\label{eq:ListSizes}
+  \begin{split}
+  |L_{z_iz_{i+1}}| &\approx 2^{12.95},\quad \text{ for } i=0,\ldots, 3 \\
+  |L_{z_iz_{i+1}z_{i+2}}| & \approx 2^{16.70},  \quad \text{ for } i=0,\ldots, 2\\
+  |L_{z_iz_{i+1}z_{i+2}z_{i+3}}| & \approx 2^{20.46},  \quad \text{ for } i=0,\ldots, 1\\
+  |L_{z_0z_{1}z_{2}z_{3}z_{4}}| & \approx 2^{24.21}
+  \end{split}
+\end{equation}
+Therefore, the complexity of the merging process is dominated by Level 3 to 4 which is approximately $2^{20.46\cdot 2}=2^{40.92}$: far beyond $2^{28.3}$.
+Zhang \etal's Claim 1 is wrong.
+The size of $L_{z_0z_1z_2z_3z_4}$ is $2^{24.21}> 2^{16.6}$.
+So Zhang \etal's Claim 2 is also wrong.
+The merging process in Fig. \ref{fig:MergeZhang} takes two lists denoted as $L_t$ and $L_{t+1}$ where $L_{t}$ contains the partial states of $\vec{ s^t}$ while $L_{t+1}$ consists of partial states of $\vec{s^{t+1}}$.
+According to Section \ref{sec:MovePatternAndBC}, a $\vec{s^t}$ should take a move $m_t\in \{0,1,2,3\}$ before reaching $\vec{s^{t+1}}$ and that move $m_t$ is decided by the three bits $(\vec{s^t}[8],\vec{s^t}[29],\vec{s^t}[51])$.
+So the merging phase between $L_t$ and $L_{t+1}$ are as follows:
+\begin{enumerate}
+  \item Initialize the merged list $L_{t}'\leftarrow \phi$.
+  \item For each $(\vec{s^t},\vec{s^{t+1}})\in L_t\times L_{t+1}$, do the following steps:
+  \begin{enumerate}
+    \item Identify the positions of the known bits in $\vec{s^t}$ denoted as $\lambda_0\subseteq [0,63]$.
+    \item Determine the move $m_t$ according to 3 known bits of $\vec{s^t}$ namely $(\vec{s^t}[8],\vec{s^t}[29],\vec{s^t}[51])$.
+    \item Determine the state $\vec{\hat{s}^t}$ \st $\vec{\hat{s}^t}\xrightarrow[]{m_t} \vec{s^{t+1}}$.
+    \item Identify the positions of the known bits in $\vec{\hat{s}^t}$ denoted as $\lambda_1\subseteq [0,63]$.
+    \item If $\vec{\hat{s}^t}[\lambda_0\cap \lambda_1]=\vec{s^t}[\lambda_0\cap \lambda_1]$, store the vector $\vec{\tilde{s}^t}\leftarrow \vec{\hat{s}^t} \vee \vec{s^t}$ where $\vee$ is bitwise OR.
+        The known bits of the newly generated  $\vec{\tilde{s}^t}$ is $\tilde{\lambda}\leftarrow\lambda_0\cup \lambda_1$.
+  \end{enumerate}
+\end{enumerate}
+According to the description above, any element $\vec{s}\in L$ should not only contain the value but the  positions of the known bits as well.
+At Level 1, since all list are generated through Alg3, all elements share the same known-bit positions
+\begin{equation}\label{eq:KnownBitsL1}
+\lambda=\{7,8,16,17,18,  28,29,38,39,40,  50,51,61,62,63\}
+\end{equation}
+But the following Example \ref{examp:DifferentMoveKnownBits} shows that different moves will result in different known bit positions. 
+Example \ref{examp:DifferentMoveKnownBits} indicates that the known bits of the merged partial state $\vec{\tilde{s}^t}$ may not be exactly the 21 bits given in \cite{AC:Zhang19}: they are also likely to be subsets of the 21 bits.
+In order to keep merging the lists in Level 2-4, $\tilde{\lambda}$ containing the known bit positions should also be stored taking the same size of the partial states. 
+Since the lists in Level 4 contain partial states of 33 bits, the $\tilde{\lambda}$'s are of the same size of 33 bits. 
+So the elements in the lists requires at most $\lceil 2\cdot 33/8\rceil=9$ bytes: Zhang \etal's Claim 3 is wrong. 
+Same with Example \ref{examp:DifferentMoveKnownBits}, the $\tilde{\lambda}$ for $\vec{\tilde{s^t}}\in L_{z_0z_1z_2z_3z_4}$ are more likely to be subsets of the 33 bits: Claim 4 of Zhang \etal is wrong. 
+In fact, according to our experiments, the number of known bits of $L_{z_0z_1z_2z_3z_4}$ elements are usually 27, which is far below 33. 
+
+\begin{example}\label{examp:DifferentMoveKnownBits}
+  Let $(\vec{s^0},\vec{s^1})\in L_{z_0z_1}\times L_{z_1z_2}$.
+  We have $\lambda_0=\lambda$ in \eqref{eq:KnownBitsL1}.
+  If the move is $m_0=0$ ($(\vec{s^0}[8], \vec{s^0}[29], \vec{s^0}[51])\in \{(0,0,0),(1,1,1)\}$), we have
+  \[
+  \lambda_1:=\{7-1,8-1,16-1,17-1,18-1,   28-1,29-1,38-1,39-1,40-1,  50-1,51-1,61-1,62-1,63-1  \}.
+  \]
+  and $|\tilde{\lambda}|=21$. 
+  If the move is $m_0=1$, ($(\vec{s^0}[8], \vec{s^0}[29], \vec{s^0}[51])\in \{(1,0,0),(0,1,1)\}$), we have
+  \[
+  \lambda_1:=\{7,8,16,17,18,   28-1,29-1,38-1,39-1,40-1,  50-1,51-1,61-1,62-1,63-1  \}.
+  \]
+    and $|\tilde{\lambda}|=19$.
+\end{example}
+\subsection{The Corrected Complexities of Zhang \etal's Attack}
+
+
 
 
 
