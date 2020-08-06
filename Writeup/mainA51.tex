@@ -230,13 +230,13 @@ When $\ell$ is large enough, there should be only 1 element in $\mathcal{S}$ whi
 In Step 3, there are $2^{2t}$ candidate moves $(m^0,\ldots, m^{t})$ and not all of them can pass the $order(A)=order(E)$ test Step 3.(b).
 We suppose that there is an positive number $0\leq \alpha \leq 1$ that averaging $\alpha  2^{2t}$ moves can pass the test.
 We further denote the averaging $order(A)$ as $\beta $.
-With $\alpha ,\beta $, the averaging time complexity can be computed as e
+With $\alpha ,\beta $, the averaging time complexity can be computed as follow:
 \begin{equation}\label{eq:Complexity}
   Comp=2^{2t}+\alpha \cdot 2^{2t+64-\beta }=2^{2t}+2^{2t+64-\beta +\log\alpha }
 \end{equation}
 We randomly select $2^{30}$ $((m^0,\ldots, m^t), (z^0,\ldots, z^m))$ pairs and do the 3.(b) test to compute the averaging $\alpha$ and $\beta$ for $t$'s.
 We find that when $t<14$, $\alpha \approx 1$ and $\beta\leq 3t$ so the overall complexity is constantly larger than $2^{64-t}\geq 2^{51}$.
-For $14\leq t\leq 29$, the $\alpha$, $\beta_t$ and $Comp$ are listed in Table \ref{tab:AlphaAndBeta}.
+For $14\leq t\leq 29$, the $\alpha$, $\beta$ and $Comp$ are listed in Table \ref{tab:AlphaAndBeta}.
 As can be seen, the lowest complexity appears at $t=21$ with $Comp=2^{43.91}$.
 The memory complexity is only $\mathcal{BC}$ and the corresponding matrix $A$ as well as its extended matrix $E$ in \eqref{eq:BCLpSystem} and \eqref{eq:ExtendedMatrixOfA}.
 The memory complexity is only $O(t)$.
@@ -248,10 +248,10 @@ According to our experiment, $\ell=32$ is well enough to identify the correct $\
 
 \begin{table}[htbp]
   \centering
-  \caption{The averaging $\alpha_t$ and $\beta_t$ in \eqref{eq:Complexity} with $2^{30}$ random tests}\label{tab:AlphaAndBeta}
+  \caption{The averaging $\alpha$ and $\beta$ in \eqref{eq:Complexity} with $2^{30}$ random tests}\label{tab:AlphaAndBeta}
     \begin{tabular}{|l|l|l|l|l|l|l|l|}
     \hline
-    \multicolumn{1}{|c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\alpha$} & \multicolumn{1}{c|}{$\log Comp$} & \multicolumn{1}{c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\alpha$} & \multicolumn{1}{c|}{$\log Comp$} \\
+    \multicolumn{1}{|c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\log\alpha$} & \multicolumn{1}{c|}{$\log Comp$} & \multicolumn{1}{c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\log\alpha$} & \multicolumn{1}{c|}{$\log Comp$} \\
     \hline
 
     14    & 41.95852 & -0.02809 & 50.01338 & 22    & 61.60404 & -3.97115 & 44.41749 \\
@@ -272,7 +272,6 @@ According to our experiment, $\ell=32$ is well enough to identify the correct $\
     \hline
 
     \end{tabular}%
-  \label{tab:Example1}%
 \end{table}%
 
 
@@ -358,7 +357,7 @@ According to our experiment, $\ell=32$ is well enough to identify the correct $\
 \section{Revisit Zhang's Attack in \cite{AC:Zhang19}}
 Zhang \etal's attack in \cite{AC:Zhang19} claim to have a practical complexity but they only implemented the very 1st stage of their attack leaving it unknown whether the whole attack can work as claimed.
 To verify their attack, we fully implement their attack only to find several mistakes and the complexity evaluation to the whole attack is far too optimistic.
-\subsection{Zhang's Wrong Evaluation to $p_1$ and the Success Probability}
+\subsection{Zhang's Wrong Evaluation to $p_1$ and the Success Probability}\label{sec:ZhangWrongP1}
 In \cite{AC:Zhang19}, they claim that for a randomly constructed list $L_{z_0z_1}$ of size $4\cdot 2^{15}/99=7963$, the correct internal state can be covered with probability $0.9835$.
 However, we repeat the experiment $10^6$ times and the correct init state lies in $L_{z_0z_1}$ for only 972436 times.
 So it is safe for us to claim that the actual $p_1$ is $0.9725$: Zhang's evaluation in \cite{AC:Zhang19} is far too optimistic.
@@ -404,7 +403,7 @@ Therefore, the success probability of Zhang's attack is far too optimistic as we
   \label{tab:ProbInU}%
 \end{table}%
 
-\subsection{Zhang's Wrong Evaluation to the Complexities}
+\subsection{Zhang's Wrong Evaluation to the Complexities}\label{sec:ZhangWrongCompAnalysis}
 The main process of Zhang's attack in \cite{AC:Zhang19} can be summarized as Fig. \ref{fig:MergeZhang}.
 \begin{figure}[htbp]
   \centering
@@ -426,12 +425,12 @@ Our practical implementation of the full attack proves that all the claims above
 Since the merging of two lists $L_1,L_2$ requires $|L_1|\cdot |L_2|$ operations, it is impossible to get exact evaluation to the complexities without actually knowing the sizes of all the lists.
 According to our implementation, the sizes of the lists are as follows:
 \begin{equation}\label{eq:ListSizes}
-  \begin{split}
+  \begin{aligned}
   |L_{z_iz_{i+1}}| &\approx 2^{12.95},\quad \text{ for } i=0,\ldots, 3 \\
   |L_{z_iz_{i+1}z_{i+2}}| & \approx 2^{16.70},  \quad \text{ for } i=0,\ldots, 2\\
   |L_{z_iz_{i+1}z_{i+2}z_{i+3}}| & \approx 2^{20.46},  \quad \text{ for } i=0,\ldots, 1\\
   |L_{z_0z_{1}z_{2}z_{3}z_{4}}| & \approx 2^{24.21}
-  \end{split}
+  \end{aligned}
 \end{equation}
 Therefore, the complexity of the merging process is dominated by Level 3 to 4 which is approximately $2^{20.46\cdot 2}=2^{40.92}$: far beyond $2^{28.3}$.
 Zhang \etal's Claim 1 is wrong.
@@ -477,28 +476,58 @@ In order to keep merging the lists in Level 2-4, $\tilde{\lambda}$ containing th
 Since the lists in Level 4 contain partial states of 33 bits, the $\tilde{\lambda}$'s are of the same size of 33 bits.
 So the elements in the lists requires at most $\lceil 2\cdot 33/8\rceil=9$ bytes: Zhang \etal's Claim 3 is wrong.
 Same with Example \ref{examp:DifferentMoveKnownBits}, the $\tilde{\lambda}$ for $\vec{\tilde{s^t}}\in L_{z_0z_1z_2z_3z_4}$ are more likely to be subsets of the 33 bits: Claim 4 of Zhang \etal is wrong.
-In fact, according to our experiments, the number of known bits of $L_{z_0z_1z_2z_3z_4}$ elements are usually 27, which is far below 33.
+In fact, according to our experiments, the number of known bits of $L_{z_0z_1z_2z_3z_4}$ elements are usually $|\tilde{\lambda}|\approx 30$, which is far below 33.
 
 \subsection{The Corrected Complexities of Zhang \etal's Attack}
-According to Zhang \etal in \cite{AC:Zhang19}, after the CP part in $L_{z_0z_1z_2z_3z_4}$ are recovered, the rest parts are to be recovered in the same manner as our guess-and-determine attack in Section \ref{sec:OurGuessAndDetermine}: we guess $t=1,2,...$ moves and maintain a bit condition system in \eqref{eq:BCLpSystem} to identify the correct state. 
-As have been analyzed in the previous section, each  $L_{z_0z_1z_2z_3z_4}$ element contains about 27 bits of information. 
-From the bit condition perspective in Section \ref{sec:OurGuessAndDetermine}, this is equivalent to 27 bit conditions. 
-Since each move guess corresponds to 3 bit conditions, 27 bit conditions correspond to $t=9$ move guesses. 
-Therefore, the previous Table \ref{tab:Example1} are to be rewritten as Table \ref{tab:Example2}. 
-After guess $t$ moves, corresponding to $2t$ bits, there are $\alpha \cdot \alpha \cdot 2^{24.21+2t}$ states to be checked by exhausting the remaining $64-\beta$ bits. 
-So the overall complexity of the whole attack in \cite{AC:Zhang19} can be computed as \eqref{eq:ZhangComplexityCorrect}.
-\begin{equation}\label{eq:ZhangComplexityCorrect}  
-Comp=2^{41}+2^{24.21+2t}+\alpha \cdot 2^{24.21+2t+64-\beta}
+According to Zhang \etal in \cite{AC:Zhang19}, after the CP part in $L_{z_0z_1z_2z_3z_4}$ are recovered, the rest parts are to be recovered in the same manner as our guess-and-determine attack in Section \ref{sec:OurGuessAndDetermine}: for each $\vec{\tilde{s}^0}\in L_{z_0z_1z_2z_3z_4}$, we deduce the moves $m_0,\ldots, m_4$, guess moves $m_t$ for $t=5,6,7,...$ and maintain a bit condition system in \eqref{eq:BCLpSystem} to identify the correct state.
+It is also noticeable that the system $A\vec{x}^T=b^T$ should not only contain the $3t$ bit conditions deduced from $(m_0,\ldots, m_t)$ and $(z_0,\ldots, z_t)$: there are also $|\tilde{\lambda}|$ bit conditions identifying the known bits for $\vec{\tilde{s}^0}\in L_{z_0z_1z_2z_3z_4}$. 
+So the number of bit conditions should now become $3t+|\tilde{\lambda}|$. 
+So the whole process of Zhang \etal's attack can now be summarized as follows:
+\begin{enumerate}
+  \item Query the A5/1 encryption oracle for $\ell$ keystream bits $z^0,\ldots, z^{\ell}$
+  \item Run the merging process in Fig. \ref{fig:MergeZhang} and acquire the list of candidates $L_{z_0z_1z_2z_3z_4}$ for the CP part of A5/1.
+   \item Initialize an empty set $\mathcal{S}$ of $\vec{s^0}$ candidates
+   \item For each $\vec{\tilde{s}^0}\in L_{z_0z_1z_2z_3z_4}$
+   \begin{enumerate}
+     \item Deduce the 5 moves $(m_0,\ldots, m_4)$ and the known bit position set $\tilde{\lambda}$
+     \item For some $t \in [6,\ell)$, we guess the $2^{2(t-5)}$ movements $(m^5,\ldots, m^t)$, we acquire the bit conditions $\mathcal{BC}\leftarrow {\tt getBC}((m^0,\ldots, m^t), (z^0,\ldots, z^t))$ and do the following substeps:
+     \begin{enumerate}
+        \item For all $i\in \tilde{\lambda}$, add the bit condition $x_i=\vec{\tilde{s}^0}[i]$ to $\mathcal{BC}$
+        \item Deduce the $A$ and $\vec b$ in \eqref{eq:BCLpSystem} according to $\mathcal{BC}$ and compute the extended matrix $E$ in \eqref{eq:ExtendedMatrixOfA}
+        \item Compute $order(A)$ and $order(E)$, if $order(A)\neq order(E)$, such a movement guess is wrong, go back to Step 2 for the next movement guess
+        \item For all $2^{64-order(A)}$ solutions to $A\vec x^T=b^T$, set $\vec{\hat{s}^0}\leftarrow \vec x$ and generate the keystream bits $\hat{z}^0,\ldots, \hat{z}^t,\hat{z}^{t+1},\ldots, \hat{z}^{\ell}$
+        \item If $(\hat{z}^{t+1},\ldots, \hat{z}^{\ell})=(z^{t+1},\ldots, z^{\ell})$, add such $\vec{\hat{s}^0}$ into $\mathcal{S}$
+      \end{enumerate}
+   \end{enumerate}
+  \item Return $\mathcal{S}$
+\end{enumerate}
+
+\noindent\textbf{Complexity Analysis. }
+In Step 4.(b), there are $2^{2t-10}$ candidate moves $(m^0,\ldots, m^{t})$ and we assume that only $\alpha 2^{2t-10}$ moves can pass the $order(A)=order(E)$ test at Step 4.(b).iii where $0\leq \alpha \leq 1$.
+We denote the averaging $order(A)$ as $\beta $.
+According to \eqref{eq:ListSizes}, the size of $L_{z_0z_1z_2z_3z_4}$ is approximately $2^{24.21}$. 
+The analysis in Section \ref{sec:ZhangWrongCompAnalysis}, the merging process in Step 2 has complexity $2^{40.92}$.
+With $\alpha ,\beta $, the averaging time complexity can be computed as \eqref{eq:ZhangComplexityCorrect}. 
+\begin{equation}\label{eq:ZhangComplexityCorrect}
+\begin{aligned}
+Comp&=2^{40.92}+2^{24.21+2t-10}+\alpha \cdot 2^{24.21+2t-10+64-\beta}\\
+&=2^{40.92}+2^{14.21+2t}+2^{78.21+\log \alpha -\beta}
+\end{aligned}
 \end{equation}
-The exact complexities for different $t$ parameters can also be seen in Table \ref{tab:Example2}. 
+Same with Section \ref{sec:MovePatternAndBC}, we randomly select $2^{30}$ $\left(\vec{\tilde{s}^0}, (m^5,\ldots, m^t), (z^5,\ldots, z^m)\right)$ triplets and do the 4.(b).iii test to compute the averaging $\alpha$ and $\beta$ for $t$'s.
+For $6\leq t\leq 29$, the $\alpha$, $\beta$ and $Comp$ are listed in Table \ref{tab:ZhangAlphaAndBeta}.
+As can be seen, the lowest complexity appears at $t=xxxxxx$ with $Comp=2^{xxxxx}$. 
+The memory complexity is dominated by the size of $L_{z_0z_1z_2z_3z_4}$ which is $2^{24.21}$ according to \eqref{eq:ListSizes}. 
+Zhang \etal has already claimed that the attack can only succeed when the exact $\vec{s^i}$ lies in the corresponding list $L_{z_iz_{i+1}}$ for $i=0,1,2,3$ in Fig. \ref{fig:MergeZhang}. 
+According to the Section \ref{sec:ZhangWrongP1}, the success probability can be evaluated as $p_1^4\approx 0.8942$. 
 
 
 \begin{table}[htbp]
   \centering
-  \caption{The averaging $\alpha_t$ and $\beta_t$ in \eqref{eq:Complexity} with $2^{30}$ random tests}\label{tab:AlphaAndBeta}
+  \caption{The averaging $\alpha$ and $\beta$ in \eqref{eq:Complexity} with $2^{30}$ random tests}\label{tab:ZhangAlphaAndBeta}
     \begin{tabular}{|l|l|l|l|l|l|l|l|}
     \hline
-    \multicolumn{1}{|c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\alpha$} & \multicolumn{1}{c|}{$\log Comp$} & \multicolumn{1}{c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\alpha$} & \multicolumn{1}{c|}{$\log Comp$} \\
+    \multicolumn{1}{|c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\log\alpha$} & \multicolumn{1}{c|}{$\log Comp$} & \multicolumn{1}{c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\log\alpha$} & \multicolumn{1}{c|}{$\log Comp$} \\
     \hline
 
     5    & 41.95852 & -0.02809 & 50.01338 & 22    & 61.60404 & -3.97115 & 44.41749 \\
@@ -519,7 +548,6 @@ The exact complexities for different $t$ parameters can also be seen in Table \r
     \hline
 
     \end{tabular}%
-  \label{tab:Example2}%
 \end{table}%
 
 

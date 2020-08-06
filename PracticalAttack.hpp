@@ -135,6 +135,16 @@ public:
 		eqCapacity = eqCap;
 		matOrder = 0;
 	}
+
+	PracticalAttack(InternalStateEquations track, long eqCap = 96) {
+		eqNumber = 0;
+		eqMat.SetDims(eqCap, A5_1_STATE_SIZE + 1);
+		eqMatExtend.SetDims(eqCap, A5_1_STATE_SIZE + 1);
+		stateTrack = track;
+		eqCapacity = eqCap;
+		matOrder = 0;
+	}
+
 	mat_GF2 eqMat, eqMatExtend;
 	InternalStateEquations stateTrack;
 	int eqNumber;

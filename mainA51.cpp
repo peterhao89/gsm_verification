@@ -3,9 +3,9 @@
 #include<cstring>
 #include<time.h>
 #define TEST 0
-#define MERGE 1
+#define MERGE 0
 #define GEN_GUESS_TABLE 0
-#define PRACTICAL_ATTACK 0
+#define PRACTICAL_ATTACK 1
 #define DDT_GENERATE 0
 
 #if GEN_GUESS_TABLE
@@ -139,6 +139,7 @@ int main(){
 
 
 #if PRACTICAL_ATTACK
+#include"Merge.hpp"
 
 u64 sum64(u64 vec) {
 	u64 summation = 0;
@@ -236,6 +237,69 @@ FilterStrengthAtRoundReport getFilterStrengthAtRound(long guess, int round, long
 	return FilterStrengthAtRoundReport{ testTime, totalOrder,passedCount };
 }
 
+FilterStrengthAtRoundReport getFilterStrengthAtRoundAfter5(long guess, int round, long testTime = (1 << 20), int threadNumber = 6) {
+	u64 maskMask = 0;
+	for (int i = 0; i < round; ++i) {
+		maskMask <<= 2;
+		maskMask |= 0x3;
+	}
+	u64 haveDone = 0x3ff;
+
+	long passedCount = 0;
+	u64 totalOrder = 0;
+	omp_set_num_threads(threadNumber);
+#pragma omp parallel for reduction(+:passedCount) reduction(+:totalOrder)
+	for (int i = 0; i < threadNumber; ++i) {
+		
+		for (long testCount = i; testCount < testTime; testCount += threadNumber) {
+			vector<vector<StateAndKnown>> levelLists = {
+			{StateAndKnown(rand_64() & MASK_Z0Z1),StateAndKnown(rand_64() & MASK_Z0Z1),StateAndKnown(rand_64() & MASK_Z0Z1),
+				StateAndKnown(rand_64() & MASK_Z0Z1)},
+			{},{},{}
+			};
+			for (int level = 0; level < 3; ++level) {
+				for (int i = 0; i < (3 - level); ++i) {
+					u64 move0 = levelLists[level][i].getClockBits();
+					StateAndKnown tmp = levelLists[level][i + 1].getStateAndKnownBeforeMove(move0);
+					u64 orMask = tmp.known | levelLists[level][i].known;
+					StateAndKnown vec2Add = StateAndKnown(levelLists[level][i].state |
+						(tmp.state & (orMask ^ levelLists[level][i].known)), orMask);
+					levelLists[level + 1].push_back(vec2Add);
+				}
+			}
+			StateAndKnown cpPart = levelLists[3][0];
+			u64 initState = cpPart.state | (rand_64() & (~cpPart.known));
+
+			A5_1_S100 orderCheckRunnter(initState);
+			orderCheckRunnter.init(initState);
+			for (int r = 0; r < round; ++r) {
+				orderCheckRunnter.doOneStep();
+			}
+			u64 movesMask = orderCheckRunnter.getHaveDoneMoveMask();
+			if (guess != 0) {
+				do {
+					movesMask ^= rand_64() & (maskMask^haveDone);
+				} while (movesMask == orderCheckRunnter.getHaveDoneMoveMask());
+			}
+			PracticalAttack attack = PracticalAttack(96+33);
+			attack.constructEquations(movesMask,
+				orderCheckRunnter.getPrefix(),
+				round);
+			u64 bitPos = 1;
+			for (int i = 0; i < 64; ++i) {
+				if ((bitPos & cpPart.known) != 0) {
+					attack.setOneEquation(bitPos, bit64(cpPart.state, i));
+				}
+				bitPos <<= 1;
+			}
+			if (attack.isFeasible()) {
+				++passedCount;
+			}
+			totalOrder += attack.matOrder;
+		}
+	}
+	return FilterStrengthAtRoundReport{ testTime, totalOrder,passedCount };
+}
 
 inline long getRemained(int round, int threadNumber) {
 	
@@ -269,9 +333,41 @@ inline long getRemained(int round, int threadNumber) {
 
 
 int main() {
-	srand(time(NULL));
+	srand_64(time(NULL));
 	long testTime = 1;
-	testTime <<= 30;
+	testTime <<= 10;
+	vector<vector<StateAndKnown>> level1Lists = {
+		{
+			StateAndKnown(rand_64() & MASK_Z0Z1),
+			StateAndKnown(rand_64() & MASK_Z0Z1),
+			StateAndKnown(rand_64() & MASK_Z0Z1),
+			StateAndKnown(rand_64() & MASK_Z0Z1)
+		},
+		{},{},{}
+	};
+	for (int level = 0; level < 3; ++level) {
+		cout <<dec<< "Level " << level + 1 << endl;
+		for (int i = 0; i < (3 - level); ++i) {
+			u64 move0 = level1Lists[level][i].getClockBits();
+			StateAndKnown tmp = level1Lists[level][i + 1].getStateAndKnownBeforeMove(move0);
+			u64 orMask = tmp.known | level1Lists[level][i].known;
+			StateAndKnown vec2Add = StateAndKnown(level1Lists[level][i].state |
+				(tmp.state & (orMask ^ level1Lists[level][i].known)), orMask);
+			level1Lists[level+1].push_back(vec2Add);
+			std::set<int> knSet = vec2Add.getKnownBits();
+			cout << hex << "Move " << move0 << endl;
+			cout << dec << "Total: " << knSet.size() << endl;
+			cout << dec << "Known Bits:";
+			for (std::set<int>::iterator ite = knSet.begin(); ite != knSet.end(); ++ite) {
+				cout << dec << *ite << ",";
+			}
+			cout << endl;
+		}
+	}
+
+
+
+
 
 #if EXACT_FILTER_AT_ROUND
 	int threadNumber = 6;
@@ -292,12 +388,13 @@ int main() {
 #define ROUNDFILTER_RANDOM_WRONG_GUESSES 1
 #endif
 
-#if ROUNDFILTER_RANDOM_WRONG_GUESSES
+#if ROUNDFILTER_RANDOM_WRONG_GUESSES==1
 	string header = "Rd;#pss;#matOrder;#test";
 	ofstream file1("RoundFilterEval.txt");
 	file1 << header << endl;
-	for (int round = 14; round < 30; ++round) {
-		FilterStrengthAtRoundReport mm = getFilterStrengthAtRound(1, round, testTime);
+	for (int round = 6; round < 30; ++round) {
+		FilterStrengthAtRoundReport mm = getFilterStrengthAtRoundAfter5(1, round, testTime);
+			//getFilterStrengthAtRound(1, round, testTime);
 		for (int i = 0; i < 2; ++i) {
 			ostream& o = (i == 0) ? cout : file1;
 			o << dec <<round<<";"<< mm.passedTimeTotal << ";"<<mm.matOrderTotal <<";"<< mm.testTime << endl;

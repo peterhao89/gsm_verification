@@ -1,6 +1,7 @@
 #pragma once
 #include"A51Impl.hpp"
-
+#include<set>
+using namespace std;
 const vector<int> BITS_RELATED_Z0 = { 8,17,18, 29,39,40, 51,62,63 };
 
 
@@ -203,7 +204,7 @@ u64 getInteralStateByStaticZ0Z1(u64 zPattern) {
 	u64 initState = rand_64() & MASK_Z0Z1; 
 	A5_1_S100 runner(initState);
 	vector<int> hiBits = { 18,40,63 };
-	set<int> haveUsedBit;
+	std::set<int> haveUsedBit;
 	for (int step = 0; step < 2; ++step) {
 		u64 nextMove = runner.getNextMoveMask();
 		switch (nextMove)
@@ -287,8 +288,8 @@ struct StateAndKnown {
 		return (*this < b || *this == b);
 	}
 
-	set<int> getKnownBits() {
-		set<int> knownBits;
+	std::set<int> getKnownBits() {
+		std::set<int> knownBits;
 		for (int i = 0; i < 64; ++i) {
 			if (bit64(known, i) == 1) {
 				knownBits.insert(i);
@@ -305,11 +306,11 @@ struct StateAndKnown {
 		return clockBits;
 	}
 
-	set<int> getKnownBitsAfterMove() {
+	std::set<int> getKnownBitsAfterMove() {
 		u64 clockBits = bit64(state, 8);
 		clockBits |= (bit64(state, 29) << 1);
 		clockBits |= (bit64(state, 51) << 2);
-		set<int> knownBits;
+		std::set<int> knownBits;
 		switch (clockBits)
 		{
 		case 7:
@@ -366,8 +367,8 @@ struct StateAndKnown {
 	}
 
 	//Move the current bits by a clock backward
-	set<int> getKnownBitsBeforeMove(u64 clockBits) {
-		set<int> knownBits;
+	std::set<int> getKnownBitsBeforeMove(u64 clockBits) {
+		std::set<int> knownBits;
 		switch (clockBits)
 		{
 		case 7:
@@ -490,9 +491,9 @@ vector<u64> getLZ0Z1withAlg3(u64 z0, u64 iteTime, u64 diff = 0x3) {
 }*/
 
 
-set<StateAndKnown> getLZ0Z1withAlg3(u64 z0, u64 iteTime, u64 diff = 0x3) {
+std::set<StateAndKnown> getLZ0Z1withAlg3(u64 z0, u64 iteTime, u64 diff = 0x3) {
 	//iteTime=4*2^15/99
-	set<u64> collector;
+	std::set<u64> collector;
 	u64 z1 = (z0 ^ diff);
 	for (u64 ite = 0; ite < iteTime; ++ite) {
 		u64 interalState = getInteralStateByStaticZ0Z1(z1);
@@ -502,8 +503,8 @@ set<StateAndKnown> getLZ0Z1withAlg3(u64 z0, u64 iteTime, u64 diff = 0x3) {
 			}
 		}
 	}
-	set<StateAndKnown> res;
-	for (set<u64>::iterator ite = collector.begin(); ite != collector.end(); ++ite) {
+	std::set<StateAndKnown> res;
+	for (std::set<u64>::iterator ite = collector.begin(); ite != collector.end(); ++ite) {
 		res.insert(StateAndKnown(*ite));
 	}
 	return res;
@@ -517,7 +518,7 @@ double getP1OfAlg3(int testTime, u64 iteTime, u64 diff = 0x3) {
 		u64 initState = rand_64() & MASK_Z0Z1;
 		A5_1_S100 runner(initState);
 		for (int i = 0; i < 2; ++i)runner.doOneStep();
-		set<u64> collector;
+		std::set<u64> collector;
 		u64 prefix = runner.getPrefix() & 0x3;
 		u64 z1 = prefix ^ diff;
 		for (u64 ite = 0; ite < iteTime; ++ite) {
@@ -538,13 +539,13 @@ double getP1OfAlg3(int testTime, u64 iteTime, u64 diff = 0x3) {
 	return double(coverCount) / count;
 }
 
-set<StateAndKnown> getLZ0Z1withAlg4(u64 z0, u64 iteTime, u64 diff = 0x3, int beta = 6) {
-	set<StateAndKnown> initSet = getLZ0Z1withAlg3(z0, iteTime, diff);
+std::set<StateAndKnown> getLZ0Z1withAlg4(u64 z0, u64 iteTime, u64 diff = 0x3, int beta = 6) {
+	std::set<StateAndKnown> initSet = getLZ0Z1withAlg3(z0, iteTime, diff);
 	vector<StateAndKnown> collector;
 	for (int i = 0; i < beta-1; ++i) {
 		collector.clear();
-		set<StateAndKnown> tmpSet=initSet;
-		set<StateAndKnown> tmpSet1 = getLZ0Z1withAlg3(z0, iteTime, diff);
+		std::set<StateAndKnown> tmpSet=initSet;
+		std::set<StateAndKnown> tmpSet1 = getLZ0Z1withAlg3(z0, iteTime, diff);
 		set_intersection(tmpSet.begin(), tmpSet.end(), tmpSet1.begin(), tmpSet1.end(), back_inserter(collector));
 		initSet.clear();
 		for (int j = 0; j < collector.size(); ++j) {
@@ -556,12 +557,12 @@ set<StateAndKnown> getLZ0Z1withAlg4(u64 z0, u64 iteTime, u64 diff = 0x3, int bet
 }
 
 vector<StateAndKnown> getLZ0Z1withAlg5(u64 z0, u64 iteTime, u64 diff = 0x3, int beta = 6, int gamma=2) {
-	set<StateAndKnown> initSet = getLZ0Z1withAlg4(z0, iteTime, diff,beta);
+	std::set<StateAndKnown> initSet = getLZ0Z1withAlg4(z0, iteTime, diff,beta);
 	vector<StateAndKnown> collector;
 	for (int i = 0; i < gamma-1; ++i) {
 		collector.clear();
-		set<StateAndKnown> tmpSet = initSet;
-		set<StateAndKnown> tmpSet1 = getLZ0Z1withAlg4(z0, iteTime, diff, beta);
+		std::set<StateAndKnown> tmpSet = initSet;
+		std::set<StateAndKnown> tmpSet1 = getLZ0Z1withAlg4(z0, iteTime, diff, beta);
 		set_union(tmpSet.begin(), tmpSet.end(), tmpSet1.begin(), tmpSet1.end(), back_inserter(collector));
 		initSet.clear();
 		for (int j = 0; j < collector.size(); ++j) {
@@ -569,7 +570,7 @@ vector<StateAndKnown> getLZ0Z1withAlg5(u64 z0, u64 iteTime, u64 diff = 0x3, int 
 		}
 	}
 	collector.clear();
-	for (set<StateAndKnown>::iterator ite = initSet.begin(); ite != initSet.end(); ++ite) {
+	for (std::set<StateAndKnown>::iterator ite = initSet.begin(); ite != initSet.end(); ++ite) {
 		collector.push_back(*ite);
 	}
 	return collector;
