@@ -481,7 +481,7 @@ So the elements in the lists requires at most $\lceil 2\cdot 33/8\rceil=9$ bytes
 Same with Example \ref{examp:DifferentMoveKnownBits}, the $\tilde{\lambda}$ for $\vec{\tilde{s^t}}\in L_{z_0z_1z_2z_3z_4}$ are more likely to be subsets of the 33 bits: Claim 4 of Zhang \etal is wrong.
 In fact, according to our experiments, the number of known bits of $L_{z_0z_1z_2z_3z_4}$ elements are usually $|\tilde{\lambda}|\approx 30$, which is far below 33.
 
-\subsection{The Corrected Complexities of Zhang \etal's Attack}
+\subsection{The Corrected Complexities of Zhang \etal's Attack with Our RP-Recovery}\label{sec:OurRpRecovery}
 According to Zhang \etal in \cite{AC:Zhang19}, after the CP part in $L_{z_0z_1z_2z_3z_4}$ are recovered, the rest parts are to be recovered in the same manner as our guess-and-determine attack in Section \ref{sec:OurGuessAndDetermine}: for each $\vec{\tilde{s}^0}\in L_{z_0z_1z_2z_3z_4}$, we deduce the moves $m_0,\ldots, m_4$, guess moves $m_t$ for $t=5,6,7,...$ and maintain a bit condition system in \eqref{eq:BCLpSystem} to identify the correct state.
 It is also noticeable that the system $A\vec{x}^T=b^T$ should not only contain the $3t$ bit conditions deduced from $(m_0,\ldots, m_t)$ and $(z_0,\ldots, z_t)$: there are also $|\tilde{\lambda}|$ bit conditions identifying the known bits for $\vec{\tilde{s}^0}\in L_{z_0z_1z_2z_3z_4}$. 
 So the number of bit conditions should now become $3t+|\tilde{\lambda}|$. 
@@ -514,12 +514,12 @@ With $\alpha ,\beta $, the averaging time complexity can be computed as \eqref{e
 \begin{equation}\label{eq:ZhangComplexityCorrect}
 \begin{aligned}
 Comp&=2^{40.92}+2^{24.21+2t-10}+\alpha \cdot 2^{24.21+2t-10+64-\beta}\\
-&=2^{40.92}+2^{14.21+2t}+2^{78.21+\log \alpha -\beta}
+&=2^{40.92}+2^{14.21+2t}+2^{78.21+2t+\log \alpha -\beta}
 \end{aligned}
 \end{equation}
 Same with Section \ref{sec:MovePatternAndBC}, we randomly select $2^{30}$ $\left(\vec{\tilde{s}^0}, (m^5,\ldots, m^t), (z^5,\ldots, z^m)\right)$ triplets and do the 4.(b).iii test to compute the averaging $\alpha$ and $\beta$ for $t$'s.
-For $6\leq t\leq 29$, the $\alpha$, $\beta$ and $Comp$ are listed in Table \ref{tab:ZhangAlphaAndBeta}.
-As can be seen, the lowest complexity appears at $t=xxxxxx$ with $Comp=2^{xxxxx}$. 
+For $6\leq t\leq 29$, the $\alpha$, $\beta$ and $Comp$ are listed in Table \ref{tab:ZhangAlphaAndBeta}. 
+As can be seen, the complexities are constantly larger than $2^{49}$ which is no better than our guess-and-determine attack in Section \ref{sec:OurGuessAndDetermine}. 
 The memory complexity is dominated by the size of $L_{z_0z_1z_2z_3z_4}$ which is $2^{24.21}$ according to \eqref{eq:ListSizes}. 
 Zhang \etal has already claimed that the attack can only succeed when the exact $\vec{s^i}$ lies in the corresponding list $L_{z_iz_{i+1}}$ for $i=0,1,2,3$ in Fig. \ref{fig:MergeZhang}. 
 According to the Section \ref{sec:ZhangWrongP1}, the success probability can be evaluated as $p_1^4\approx 0.8942$. 
@@ -533,27 +533,66 @@ According to the Section \ref{sec:ZhangWrongP1}, the success probability can be 
     \multicolumn{1}{|c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\log\alpha$} & \multicolumn{1}{c|}{$\log Comp$} & \multicolumn{1}{c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\log\alpha$} & \multicolumn{1}{c|}{$\log Comp$} \\
     \hline
 
-    5    & 41.95852 & -0.02809 & 50.01338 & 22    & 61.60404 & -3.97115 & 44.41749 \\
+    6    & 31.957 & -0.160 & 58.094 & 14    & 54.675 & -0.524 &  51.012\\
     \hline
-    6    & 44.86764 & -0.09501 & 49.03736 & 23    & 62.78097 & -5.91544 & 46.0546 \\
+    7    & 34.683 & -0.203 & 57.325 & 15    & 56.735 & -0.848 &  50.625\\
     \hline
-    7    & 47.68339 & -0.23144 & 48.08519 & 24    & 63.43321 & -8.4195 & 48.00623 \\
+    8    & 37.584 & -0.217 & 56.409 & 16    & 58.302 & -1.415 &  50.493\\
     \hline
-    8    & 50.38127 & -0.46833 & 47.15056 & 25    & 63.75542 & -11.173 & 50.00074 \\
+    9    &  40.548 & -0.223 & 55.438 & 17    & 59.485 & -2.202 &  50.523\\
     \hline
-    9    & 52.95498 & -0.81293 & 46.23329 & 26    & 63.9043 & -14.0599 & 52.00009 \\
+    10    & 43.515 & -0.234 & 54.461 & 18    & 60.401 & -3.194 &  50.614\\
     \hline
-    10    & 55.4087 & -1.26981 & 45.33048 & 27    & 63.96694 & -17.0267 & 54.00001 \\
+    11    & 46.457 & -0.259 & 53.494 & 19    & 61.146 & -4.403 &  50.661\\
     \hline
-    20    & 57.73363 & -1.85176 & 44.48072 & 28    & 63.98999 & -20.0213 & 56 \\
+    12    & 49.371 & -0.300 & 52.540 & 20    & 61.788 & -5.736 &  50.686\\
     \hline
-    21    & 59.86026 & -2.67122 & \textbf{43.91356} & 29    & 63.99728 & -23.1174 & 58 \\
+    13    & 52.159 & -0.370 & 51.681 & 21    & 62.365 & -7.287 &  50.557\\
     \hline
-
     \end{tabular}%
 \end{table}%
 
 
+\subsection{The Corrected Complexities of Zhang \etal's Attack with The Original RP-Recovery}\label{sec:ZhangRpRecovery}
+Note that original RP recovery does not guess the movements $m_6,m_7,\ldots$ but the exact clock bits $\vec{s^6}[8,29,51], \vec{s^7}[8,29,51],\ldots$. 
+From the bit condition point of view, such guesses can deduce both $m_6,m_7,\ldots$ and additional 1-bit information about clock bits. 
+Therefore, for $t\geq 6$, Zhang \etal guess $3(t-5)$ bits of information and order of the $A$ in \eqref{eq:BCLpSystem} grows $4(t-5)$ bit conditions. 
+So the complexities for Zhang \etal's original attack is \eqref{eq:ZhangOriginComplexity}. 
+\begin{equation}\label{eq:ZhangOriginComplexity}
+\begin{aligned}
+Comp&=2^{40.92}+2^{24.21+3t-15}+\alpha \cdot 2^{24.21+3t-15+64-\beta}\\
+&=2^{40.92}+2^{9.21+3t}+2^{73.21+3t+\log \alpha -\beta}
+\end{aligned}
+\end{equation}
+The $\beta$ and $\alpha$ for this method is listed in Table \ref{tab:ZhangAlphaAndBetaOriginal}. 
+As can be seen, the complexities are constantly larger than $2^{57}$, indicating that Zhang \etal's complexity evaluation in \cite{AC:Zhang19} is far too optimistic. 
+
+\begin{table}[htbp]
+  \centering
+  \caption{The averaging $\alpha$ and $\beta$ in \eqref{eq:Complexity} with $2^{30}$ random tests}\label{tab:ZhangAlphaAndBetaOriginal}
+    \begin{tabular}{|l|l|l|l|l|l|l|l|}
+    \hline
+    \multicolumn{1}{|c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\log\alpha$} & \multicolumn{1}{c|}{$\log Comp$} & \multicolumn{1}{c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\log\alpha$} & \multicolumn{1}{c|}{$\log Comp$} \\
+    \hline
+
+    6    & 33.443 & -0.256 & 62.511 & 14    & 59.715 & -0.989 &  59.506\\
+    \hline
+    7    & 37.424 & -0.285 & 61.501 & 15    & 60.510 & -1.455 &  61.245\\
+    \hline
+    8    & 41.423 & -0.300 & 60.487 & 16    & 61.388 & -2.586 &  62.236\\
+    \hline
+    9    & 45.421  & -0.307 & 59.481 & 17    & 62.273 & -4.668 &  62.236\\
+    \hline
+    10   & 49.415 & -0.357  & 58.438 & 18    & 62.975 & -7.000 &  62.269\\
+    \hline
+    11    & 53.470 & -0.430 & 57.309 & 19    & 63.501 & -9.483 &  62.234\\
+    \hline
+    12    & 56.494 & -0.570 & 57.147 & 20    & 63.834 & -12.293 &  62.083\\
+    \hline
+    13    & 58.436 & -0.752 & 58.022 & 21    & 63.980 & -15.476 &  61.754\\
+    \hline
+    \end{tabular}%
+\end{table}%
 
 
 

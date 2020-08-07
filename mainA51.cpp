@@ -269,33 +269,34 @@ FilterStrengthAtRoundReport getFilterStrengthAtRoundAfter5(long guess, int round
 			}
 			StateAndKnown cpPart = levelLists[3][0];
 			u64 initState = cpPart.state | (rand_64() & (~cpPart.known));
+			u64 wrongGuessState = 0;
+			do {
+				wrongGuessState = cpPart.state | (rand_64() & (~cpPart.known));
+			} while (wrongGuessState == initState);
+			A5_1_S100 orderCheckRunner(initState);
+			A5_1_S100 wrongGuessRunner(wrongGuessState);
+			PracticalAttack attackGuessClock = PracticalAttack(256 + 33);
+			attackGuessClock.addKnown(cpPart.known, cpPart.state);
 
-			A5_1_S100 orderCheckRunnter(initState);
-			orderCheckRunnter.init(initState);
-			for (int r = 0; r < round; ++r) {
-				orderCheckRunnter.doOneStep();
+			for (int r = 0; r < 5; ++r) {
+				orderCheckRunner.doOneStep();
+				wrongGuessRunner.doOneStep();
 			}
-			u64 movesMask = orderCheckRunnter.getHaveDoneMoveMask();
-			if (guess != 0) {
-				do {
-					movesMask ^= rand_64() & (maskMask^haveDone);
-				} while (movesMask == orderCheckRunnter.getHaveDoneMoveMask());
+			attackGuessClock.constructEquations(orderCheckRunner.getHaveDoneMoveMask(), orderCheckRunner.getPrefix(), 5);
+
+			for (int r = 5; r < round; ++r) {
+				orderCheckRunner.doOneStep();
+				wrongGuessRunner.doOneStep();
+				if (guess == 0)
+					attackGuessClock.doOneMove(orderCheckRunner.getLastMoveMask(), orderCheckRunner.getCurrentZ());
+				else
+					attackGuessClock.doOneMove(wrongGuessRunner.getLastMoveMask(), orderCheckRunner.getCurrentZ());
 			}
-			PracticalAttack attack = PracticalAttack(96+33);
-			attack.constructEquations(movesMask,
-				orderCheckRunnter.getPrefix(),
-				round);
-			u64 bitPos = 1;
-			for (int i = 0; i < 64; ++i) {
-				if ((bitPos & cpPart.known) != 0) {
-					attack.setOneEquation(bitPos, bit64(cpPart.state, i));
-				}
-				bitPos <<= 1;
-			}
-			if (attack.isFeasible()) {
+				
+			if (attackGuessClock.isFeasible()) {
 				++passedCount;
 			}
-			totalOrder += attack.matOrder;
+			totalOrder += attackGuessClock.matOrder;
 		}
 	}
 	return FilterStrengthAtRoundReport{ testTime, totalOrder,passedCount };
@@ -339,25 +340,25 @@ FilterStrengthAtRoundReport getFilterStrengthAtRoundAfter5GuessClocks(long guess
 			do {
 				wrongGuessState = cpPart.state | (rand_64() & (~cpPart.known));
 			} while (wrongGuessState==initState);
-			A5_1_S100 orderCheckRunnter(initState);
+			A5_1_S100 orderCheckRunner(initState);
 			A5_1_S100 wrongGuessRunner(wrongGuessState);
-			orderCheckRunnter.init(initState);
+			orderCheckRunner.init(initState);
 			PracticalAttack attackGuessClock = PracticalAttack(256 + 33);
 			attackGuessClock.addKnown(cpPart.known, cpPart.state);
 			for (int r = 0; r < 5; ++r) {
-				orderCheckRunnter.doOneStep();
+				orderCheckRunner.doOneStep();
 				wrongGuessRunner.doOneStep();
 			}
-			attackGuessClock.constructEquations(orderCheckRunnter.getHaveDoneMoveMask(), orderCheckRunnter.getPrefix(),5);
+			attackGuessClock.constructEquations(orderCheckRunner.getHaveDoneMoveMask(), orderCheckRunner.getPrefix(),5);
 			//After 5 rounds
 
 
 			vector<int> regGuessCounter = { 0,0,0 };
 			for (int r = 5; r < round; ++r) {
-				u64 currentState = (guess==0) ? orderCheckRunnter.getWholeState() : wrongGuessRunner.getWholeState();
-				u64 nextMove = (guess == 0) ? orderCheckRunnter.getNextMoveMask() : wrongGuessRunner.getNextMoveMask();
-				u64 nextClock = (guess == 0) ? orderCheckRunnter.getNextClock() : wrongGuessRunner.getNextClock();
-				orderCheckRunnter.doOneStep();
+				u64 currentState = (guess==0) ? orderCheckRunner.getWholeState() : wrongGuessRunner.getWholeState();
+				u64 nextMove = (guess == 0) ? orderCheckRunner.getNextMoveMask() : wrongGuessRunner.getNextMoveMask();
+				u64 nextClock = (guess == 0) ? orderCheckRunner.getNextClock() : wrongGuessRunner.getNextClock();
+				orderCheckRunner.doOneStep();
 				wrongGuessRunner.doOneStep();
 				u64 currentKnown = attackGuessClock.known;
 				u64 kn2Add = 0;
@@ -381,68 +382,75 @@ FilterStrengthAtRoundReport getFilterStrengthAtRoundAfter5GuessClocks(long guess
 				attackGuessClock.addKnown(kn2Add, val2Add);
 #endif
 				if(guess==0)
-					attackGuessClock.doOneMove(orderCheckRunnter.getLastMoveMask(), orderCheckRunnter.getCurrentZ());
+					attackGuessClock.doOneMove(orderCheckRunner.getLastMoveMask(), orderCheckRunner.getCurrentZ());
 				else
-					attackGuessClock.doOneMove(orderCheckRunnter.getLastMoveMask(), orderCheckRunnter.getCurrentZ());
+					attackGuessClock.doOneMove(wrongGuessRunner.getLastMoveMask(), orderCheckRunner.getCurrentZ());
 			}
 
-#if KNOWNADDED
+			u64 positionMask = 0;
+			u64 bitValMask = 0;
 			for (int bitNo = 0; bitNo <= 8; ++bitNo) {
 				if (regGuessCounter[0] < round - 5 &&
 					bit64(attackGuessClock.known, 8 - bitNo) == 0) {
 					u64 one = 1;
 					one <<= (8 - bitNo);
-					attackGuessClock.addKnown(one,
-						(guess == 0) ? 
-						bit64(orderCheckRunnter.getWholeState(), 8 - bitNo) : 
-						bit64(wrongGuessRunner.getWholeState(), 8 - bitNo)
-					);
+					positionMask |= one;
+					u64 bitVal = (guess == 0) ?
+						(orderCheckRunner.getWholeState()&one) :
+						(wrongGuessRunner.getWholeState() & one);
+					bitValMask |= bitVal;
 					++regGuessCounter[0];
 				}
 			}
-
+			
 
 			for (int bitNo = 0; bitNo <= 10; ++bitNo) {
 				if (regGuessCounter[1] < round - 5 &&
 					bit64(attackGuessClock.known, 29 - bitNo) == 0) {
 					u64 one = 1;
 					one <<= (29 - bitNo);
-					attackGuessClock.addKnown(one ,
-						(guess == 0) ? 
-						bit64(orderCheckRunnter.getWholeState(), 29 - bitNo) : 
-						bit64(wrongGuessRunner.getWholeState(), 29 - bitNo)
-					);
+					positionMask |= one;
+					u64 bitVal = (guess == 0) ? 
+						(orderCheckRunner.getWholeState() & one):
+						(wrongGuessRunner.getWholeState() & one);
+					bitValMask |= bitVal;
 					++regGuessCounter[1];
 				}
-			}
-
-			for (int bitNo = 0; bitNo <= 10; ++bitNo) {
 				if (regGuessCounter[2] < round - 5 &&
 					bit64(attackGuessClock.known, 51 - bitNo) == 0) {
 					u64 one = 1;
 					one <<= (51 - bitNo);
-					attackGuessClock.addKnown(one,
-						(guess == 0) ? 
-						bit64(orderCheckRunnter.getWholeState(), 51 - bitNo) : 
-						bit64(wrongGuessRunner.getWholeState(), 51 - bitNo)
-					);
+					positionMask |= one;
+					u64 bitVal = (guess == 0) ?
+						(orderCheckRunner.getWholeState() & one) :
+						(wrongGuessRunner.getWholeState() & one);
+					bitValMask |= bitVal;
 					++regGuessCounter[2];
 				}
 			}
+			attackGuessClock.addKnown(positionMask, bitValMask);
 
+			
+#if KNOWNADDED
+
+			positionMask = 0;
+			bitValMask = 0;
 			int regFurtherGuess = 3 * (round - 5) - regGuessCounter[0] - regGuessCounter[1] - regGuessCounter[2];
 			for (int bitNo = 0; bitNo < 64; ++bitNo) {
-				if (regFurtherGuess > 0 && bit64(attackGuessClock.known, bitNo)==0) {
+				if (regFurtherGuess > 0 && bit64(attackGuessClock.known, bitNo) == 0) {
 					u64 one = 1;
 					one <<= bitNo;
-					attackGuessClock.addKnown(one,
-						(guess == 0) ? 
-						bit64(orderCheckRunnter.getWholeState(), bitNo) : 
-						bit64(wrongGuessRunner.getWholeState(), bitNo)
-					);
+					positionMask |= one;
+					u64 bitVal = (guess == 0) ?
+						(orderCheckRunnter.getWholeState() & one) :
+						(wrongGuessRunner.getWholeState() & one);
+					bitValMask |= bitVal;
 					--regFurtherGuess;
 				}
 			}
+			attackGuessClock.addKnown(positionMask, bitValMask);
+
+
 #endif
 
 			if (attackGuessClock.isFeasible()) {
@@ -486,10 +494,16 @@ inline long getRemained(int round, int threadNumber) {
 }
 
 
-int main() {
+int main(int argc, char** argv) {
 	srand_64(time(NULL));
+	int power = 10;
 	long testTime = 1;
-	testTime <<= 10;
+	if (argc == 2) {
+		power = atoi(argv[1]);
+	}
+
+
+	testTime <<= power;
 
 
 
@@ -517,9 +531,9 @@ int main() {
 	string header = "Rd;#pss;#matOrder;#test";
 	ofstream file1("RoundFilterEval.txt");
 	file1 << header << endl;
-	for (int round = 10; round < 11; ++round) {
-		FilterStrengthAtRoundReport mm = getFilterStrengthAtRoundAfter5GuessClocks(0, round, testTime);
-			//getFilterStrengthAtRoundAfter5(0, round, testTime);
+	for (int round = 6; round < 29; ++round) {
+		FilterStrengthAtRoundReport mm = //getFilterStrengthAtRoundAfter5GuessClocks(1, round, testTime);
+			getFilterStrengthAtRoundAfter5(1, round, testTime);
 			//getFilterStrengthAtRound(1, round, testTime);
 		for (int i = 0; i < 2; ++i) {
 			ostream& o = (i == 0) ? cout : file1;
@@ -527,7 +541,6 @@ int main() {
 		}
 	}
 	file1.close();
-	getchar();
 #endif
 
 
