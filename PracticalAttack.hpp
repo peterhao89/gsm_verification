@@ -1,5 +1,6 @@
 #pragma once
 #include"CommonUtils.hpp"
+#include"Merge.hpp"
 #include <NTL/ZZ_pX.h>
 #include<NTL/RR.h>
 #include<NTL/mat_ZZ_p.h>
@@ -134,6 +135,7 @@ public:
 		stateTrack = InternalStateEquations();
 		eqCapacity = eqCap;
 		matOrder = 0;
+		known = 0;
 	}
 
 	PracticalAttack(InternalStateEquations track, long eqCap = 96) {
@@ -143,6 +145,7 @@ public:
 		stateTrack = track;
 		eqCapacity = eqCap;
 		matOrder = 0;
+		known = 0;
 	}
 
 	mat_GF2 eqMat, eqMatExtend;
@@ -150,6 +153,7 @@ public:
 	int eqNumber;
 	long eqCapacity;
 	long matOrder;
+	u64 known;
 
 
 	u64 getSolution() {
@@ -201,34 +205,76 @@ public:
 		++eqNumber;
 	}
 
+	void addKnown(u64 kn, u64 val) {
+		for (int i = 0; i < 64; ++i) {
+			if (bit64(kn, i) == 1) {
+				setOneEquation(stateTrack.currentState[i], bit64(val, i));
+			}
+		}
+		known |= kn;
+	}
+
+	u64 getRiOutputKnown(int i) {
+		u64 res = 0;
+		switch (i)
+		{
+		case 1:
+			res = bit64(known, 18) & bit64(known, 17) & bit64(known, 16) & bit64(known, 13);
+			break;
+		case 2:
+			res = bit64(known,40) & bit64(known, 39);
+			break;
+		case 3:
+			res = bit64(known, 63) & bit64(known, 62) & bit64(known, 61) & bit64(known, 48);
+			break;
+		}
+		return res;
+	}
+
+
+
 	void doOneMove(u64 oneMoveMask, u64 prefixBit) {
 		vector<u64> clkBitAnfs = {
 			stateTrack.getRiClockBitEquation(1),
 			stateTrack.getRiClockBitEquation(2),
 			stateTrack.getRiClockBitEquation(3) 
 		};
+
+		u64 k1 = (known & MASK64R1);
+		u64 k2 = (known & MASK64R2);
+		u64 k3 = (known & MASK64R3);
 		switch (oneMoveMask)
 		{
 		case 0:
 			setOneEquation(clkBitAnfs[0] ^ clkBitAnfs[1], 0);
 			setOneEquation(clkBitAnfs[0] ^ clkBitAnfs[2], 0);
+			k1 = ((k1 << 1) & MASK64R1 | getRiOutputKnown(1));
+			k2 = ((k2 << 1) & MASK64R2 | getRiOutputKnown(2));
+			k3 = ((k3 << 1) & MASK64R3 | getRiOutputKnown(3));
 			break;
 		case 1:
 			setOneEquation(clkBitAnfs[0] ^ clkBitAnfs[1], 1);
 			setOneEquation(clkBitAnfs[0] ^ clkBitAnfs[2], 1);
+			k2 = ((k2 << 1) & MASK64R2 | getRiOutputKnown(2));
+			k3 = ((k3 << 1) & MASK64R3 | getRiOutputKnown(3));
 			break;
 		case 2:
 			setOneEquation(clkBitAnfs[0] ^ clkBitAnfs[1], 1);
 			setOneEquation(clkBitAnfs[0] ^ clkBitAnfs[2], 0);
+			k1 = ((k1 << 1) & MASK64R1 | getRiOutputKnown(1));
+			k3 = ((k3 << 1) & MASK64R3 | getRiOutputKnown(3));
 			break;
 		case 3:
 			setOneEquation(clkBitAnfs[0] ^ clkBitAnfs[1], 0);
 			setOneEquation(clkBitAnfs[0] ^ clkBitAnfs[2], 1);
+			k1 = ((k1 << 1) & MASK64R1 | getRiOutputKnown(1));
+			k2 = ((k2 << 1) & MASK64R2 | getRiOutputKnown(2));
 			break;
 		}
 		stateTrack.doOneStep(oneMoveMask);
 		u64 outputEq = stateTrack.getOutputEquation();
 		setOneEquation(outputEq, prefixBit);
+		known = (k1 | k2 | k3);
 	}
 
 

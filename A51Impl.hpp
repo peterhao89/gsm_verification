@@ -32,6 +32,7 @@ public:
 		haveDoneSteps = 0;
 		haveDoneMoveMask = 0;
 		prefix = 0;
+		haveDoneClock = { 0,0 };
 	}
 	inline u64 getWholeState() {
 		return (R1 | (R2 << 19) | (R3 << 41));
@@ -45,6 +46,9 @@ public:
 		return haveDoneMoveMask;
 	}
 
+	inline vector<u64> getHaveDoneClock() {
+		return haveDoneClock;
+	}
 
 	inline u64 getCurrentZ() {
 		return (bit64(R1, 18) ^ bit64(R2, 21) ^ bit64(R3, 22));
@@ -67,6 +71,17 @@ public:
 		return stepMask;
 	}
 
+	u64 getOneStepClock(int stepNo) {
+		if (haveDoneSteps == 0)
+			cerr << "Haven't done any step yet!\n";
+		if (stepNo >= haveDoneSteps || stepNo < 0)
+			cerr << "Illegal step No" << stepNo << "\n";
+		u64 stepClock = bitW64(haveDoneClock, 3 * stepNo)|
+			(bitW64(haveDoneClock, 3 * stepNo +1)<<1)|
+			(bitW64(haveDoneClock, 3 * stepNo + 2) << 2);
+		return stepClock;
+	}
+
 	u64 getNextMoveMask() {
 		u64 a1, a2, a3;
 		a1 = bit64(R1, 8);
@@ -80,11 +95,29 @@ public:
 		return msk;
 	}
 
+	u64 getNextClock() {
+		u64 a1, a2, a3;
+		a1 = bit64(R1, 8);
+		a2 = bit64(R2, 10);
+		a3 = bit64(R3, 10);
+		return (a1|(a2<<1)|(a3<<2));
+	}
+
+
+	
+
 	u64 getLastMoveMask() {
 		if (haveDoneSteps == 0)
 			cerr << "Haven't done any step yet!\n";
-		u64 lastMask = ( 0x3& (haveDoneMoveMask >> (2 * (haveDoneSteps - 1))));
+		u64 lastMask = (0x3 & (haveDoneMoveMask >> (2 * (haveDoneSteps - 1))));
 		return lastMask;
+	}
+
+	u64 getLastClock() {
+		if (haveDoneSteps == 0)
+			cerr << "Haven't done any step yet!\n";
+		u64 stepClock = getOneStepClock(haveDoneSteps - 1);
+		return stepClock;
 	}
 
 	u64 getRiBit(int i, int bitNo) {
@@ -129,6 +162,7 @@ private:
 		a1 = bit64(R1, 8);
 		a2 = bit64(R2, 10);
 		a3 = bit64(R3, 10);
+		vector <u64> clks = { a1,a2,a3 };
 		u64 mVal = maj(a1, a2, a3);
 		u64 thisMoveMask = 0;
 		if (a1 == mVal)updateR1();
@@ -139,8 +173,11 @@ private:
 		
 		if (a3 == mVal)updateR3();
 		else thisMoveMask = 3;
-		thisMoveMask <<= ( haveDoneSteps*2);
+		thisMoveMask <<= (2 * haveDoneSteps);
 		haveDoneMoveMask |= thisMoveMask;
+		for (int i = 0; i < 3; ++i) {
+			setBitVal(haveDoneClock[(3 * haveDoneSteps + i) / 64], (3 * haveDoneSteps + i) % 64, clks[i]);
+		}
 	}
 
 
@@ -172,6 +209,7 @@ private:
 	u64 prefix;
 	int haveDoneSteps;
 	u64 haveDoneMoveMask;
+	vector<u64> haveDoneClock;
 };
 
 

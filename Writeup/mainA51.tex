@@ -366,8 +366,11 @@ Maybe he used RC4 as the source of randomness which is not so qualified.
 Our experiments have tried various random generators including Snow-V, AES, the NSF standard random number generator etc.
 All these experiments reveal that the actual $p_1$ is 0.9725 rather than 0.9835: Zhang's evaluation in \cite{AC:Zhang19} is wrong.
 
-With the corrected $p_1$, the probabilities for the output sets of Alg5 to cover the correct internal state should be reevaluated as well as shown in Table \ref{tab:ProbInU}.
-Since the attack can only success when the correct internal state lies in $U$, so the parameter ${\tt Prob.}$ in Table \ref{tab:ProbInU} is actually the success probability to the whole attack.
+With the corrected $p_1$, the probabilities for the output sets of Alg5 to cover the correct internal state should be reevaluated as well as shown in Table \ref{tab:ProbInU}. 
+We read the source code corresponding to \cite{AC:Zhang19} carefully only to find that the $|U|$ parameter is wrong because of wrong implementation: 
+when they try to get $(\gamma , \beta)=(i,j)$, they implemented $(i,j+1)$ instead. 
+As a consequence, the size $|U|$'s are smaller than expected. 
+Since the attack can only succeed when the correct internal state lies in $U$, so the parameter ${\tt Prob.}$ in Table \ref{tab:ProbInU} is actually the success probability to the whole attack.
 Therefore, the success probability of Zhang's attack is far too optimistic as well.
 \begin{table}[htbp]
   \centering

@@ -11,6 +11,8 @@
 #include<string>
 
 #define bit64(x,n)   (((x)>>(n))&1)
+#define bitW64(x,n)   (((x[(n)/64])>>((n)%64))&1)
+
 using namespace std;
 
 typedef uint64_t u64;
