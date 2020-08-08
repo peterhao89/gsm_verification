@@ -378,9 +378,7 @@ FilterStrengthAtRoundReport getFilterStrengthAtRoundAfter5GuessClocks(long guess
 					setBitVal(kn2Add, 51, 1);
 					setBitVal(val2Add, 51, bit64(currentState, 51));
 				}
-#if KNOWNADDED==0
 				attackGuessClock.addKnown(kn2Add, val2Add);
-#endif
 				if(guess==0)
 					attackGuessClock.doOneMove(orderCheckRunner.getLastMoveMask(), orderCheckRunner.getCurrentZ());
 				else
@@ -429,29 +427,6 @@ FilterStrengthAtRoundReport getFilterStrengthAtRoundAfter5GuessClocks(long guess
 				}
 			}
 			attackGuessClock.addKnown(positionMask, bitValMask);
-
-			
-#if KNOWNADDED
-
-			positionMask = 0;
-			bitValMask = 0;
-			int regFurtherGuess = 3 * (round - 5) - regGuessCounter[0] - regGuessCounter[1] - regGuessCounter[2];
-			for (int bitNo = 0; bitNo < 64; ++bitNo) {
-				if (regFurtherGuess > 0 && bit64(attackGuessClock.known, bitNo) == 0) {
-					u64 one = 1;
-					one <<= bitNo;
-					positionMask |= one;
-					u64 bitVal = (guess == 0) ?
-						(orderCheckRunnter.getWholeState() & one) :
-						(wrongGuessRunner.getWholeState() & one);
-					bitValMask |= bitVal;
-					--regFurtherGuess;
-				}
-			}
-			attackGuessClock.addKnown(positionMask, bitValMask);
-
-
-#endif
 
 			if (attackGuessClock.isFeasible()) {
 				++passedCount;
@@ -532,8 +507,8 @@ int main(int argc, char** argv) {
 	ofstream file1("RoundFilterEval.txt");
 	file1 << header << endl;
 	for (int round = 6; round < 29; ++round) {
-		FilterStrengthAtRoundReport mm = //getFilterStrengthAtRoundAfter5GuessClocks(1, round, testTime);
-			getFilterStrengthAtRoundAfter5(1, round, testTime);
+		FilterStrengthAtRoundReport mm = getFilterStrengthAtRoundAfter5GuessClocks(1, round, testTime);
+			//getFilterStrengthAtRoundAfter5(1, round, testTime);
 			//getFilterStrengthAtRound(1, round, testTime);
 		for (int i = 0; i < 2; ++i) {
 			ostream& o = (i == 0) ? cout : file1;
