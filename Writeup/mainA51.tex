@@ -254,21 +254,21 @@ According to our experiment, $\ell=32$ is well enough to identify the correct $\
     \multicolumn{1}{|c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\log\alpha$} & \multicolumn{1}{c|}{$\log Comp$} & \multicolumn{1}{c|}{$t$} & \multicolumn{1}{c|}{$\beta$} & \multicolumn{1}{c|}{$\log\alpha$} & \multicolumn{1}{c|}{$\log Comp$} \\
     \hline
 
-    14    & 41.95852 & -0.02809 & 50.01338 & 22    & 61.60404 & -3.97115 & 44.41749 \\
+    14    & 41.95852 & -0.028 & 50.013 & 22    & 61.604 & -3.971 & 44.417 \\
     \hline
-    15    & 44.86764 & -0.09501 & 49.03736 & 23    & 62.78097 & -5.91544 & 46.0546 \\
+    15    & 44.86764 & -0.095 & 49.037 & 23    & 62.781 & -5.915 & 46.055 \\
     \hline
-    16    & 47.68339 & -0.23144 & 48.08519 & 24    & 63.43321 & -8.4195 & 48.00623 \\
+    16    & 47.68339 & -0.231 & 48.085 & 24    & 63.433 & -8.420 & 48.006 \\
     \hline
-    17    & 50.38127 & -0.46833 & 47.15056 & 25    & 63.75542 & -11.173 & 50.00074 \\
+    17    & 50.38127 & -0.468 & 47.151 & 25    & 63.755 & -11.173 & 50.001 \\
     \hline
-    18    & 52.95498 & -0.81293 & 46.23329 & 26    & 63.9043 & -14.0599 & 52.00009 \\
+    18    & 52.95498 & -0.813 & 46.233 & 26    & 63.904 & -14.060 & 52.000 \\
     \hline
-    19    & 55.4087 & -1.26981 & 45.33048 & 27    & 63.96694 & -17.0267 & 54.00001 \\
+    19    & 55.4087 & -1.270 & 45.330 & 27    & 63.967 & -17.027 & 54.000 \\
     \hline
-    20    & 57.73363 & -1.85176 & 44.48072 & 28    & 63.98999 & -20.0213 & 56 \\
+    20    & 57.73363 & -1.852 & 44.481 & 28    & 63.990 & -20.021 & 56.000 \\
     \hline
-    21    & 59.86026 & -2.67122 & \textbf{43.91356} & 29    & 63.99728 & -23.1174 & 58 \\
+    21    & 59.86026 & -2.671 & \textbf{43.914} & 29    & 63.997 & -23.117 & 58.000 \\
     \hline
 
     \end{tabular}%
@@ -407,7 +407,7 @@ Therefore, the success probability of Zhang's attack is far too optimistic as we
 \end{table}%
 
 \subsection{Zhang's Wrong Evaluation to the CP-Recovery Complexities}\label{sec:ZhangWrongCompAnalysis}
-The most critical step of Zhang \etal's attack in \cite{AC:Zhang19} is recovering the CP-part of $\vec{s^0}$ containing 33 bits. 
+The most critical step of Zhang \etal's attack in \cite{AC:Zhang19} is recovering the CP-part of $\vec{s^0}$ containing 33 bits.
 Such CP-recovery is accomplished using a list-merging process in Fig. \ref{fig:MergeZhang}.
 \begin{figure}[htbp]
   \centering
@@ -520,8 +520,8 @@ Comp&=2^{40.92}+2^{24.21+2t-10}+\alpha \cdot 2^{24.21+2t-10+64-\beta}\\
 \end{equation}
 Same with Section \ref{sec:MovePatternAndBC}, we randomly select $2^{30}$ $\left(\vec{\tilde{s}^0}, (m^5,\ldots, m^t), (z^5,\ldots, z^m)\right)$ triplets and do the 4.(b).iii test to compute the averaging $\alpha$ and $\beta$ for $t$'s.
 For $6\leq t\leq 29$, the $\alpha$, $\beta$ and $Comp$ are listed in Table \ref{tab:ZhangAlphaAndBeta}.
-As can be seen, the complexities are constantly larger than $2^{50}$ which is no better than our guess-and-determine attack in Section \ref{sec:OurGuessAndDetermine}. 
-The lowest possible complexity is $2^{50.567}$ and it appears at $t=16$. 
+As can be seen, the complexities are constantly larger than $2^{50}$ which is no better than our guess-and-determine attack in Section \ref{sec:OurGuessAndDetermine}.
+The lowest possible complexity is $2^{50.567}$ and it appears at $t=16$.
 The memory complexity is dominated by the size of $L_{z_0z_1z_2z_3z_4}$ which is $2^{24.21}$ according to \eqref{eq:ListSizes}.
 Zhang \etal has already claimed that the attack can only succeed when the exact $\vec{s^i}$ lies in the corresponding list $L_{z_iz_{i+1}}$ for $i=0,1,2,3$ in Fig. \ref{fig:MergeZhang}.
 According to the Section \ref{sec:ZhangWrongP1}, the success probability can be evaluated as $p_1^4\approx 0.8942$.
@@ -539,7 +539,7 @@ According to the Section \ref{sec:ZhangWrongP1}, the success probability can be 
     \hline
     7    & 34.683 & -0.203 & 57.325 & 15    & 56.735 & -0.848 &  50.643\\
     \hline
-    8    & 37.584 & -0.217 & 56.409 & 16    & 58.302 & -1.415 &  50.567\\
+    8    & 37.584 & -0.217 & 56.409 & 16    & 58.302 & -1.415 &  \textbf{50.567}\\
     \hline
     9    &  40.548 & -0.223 & 55.438 & 17    & 59.485 & -2.202 &  50.789\\
     \hline
@@ -558,7 +558,7 @@ According to the Section \ref{sec:ZhangWrongP1}, the success probability can be 
 \subsection{The Corrected Complexities of Zhang \etal's Attack with The Original RP-Recovery}\label{sec:ZhangRpRecovery}
 Note that original RP recovery does not guess the movements $m_6,m_7,\ldots$ but the exact clock bits $\vec{s^6}[8,29,51], \vec{s^7}[8,29,51],\ldots$.
 From the bit condition point of view, such guesses can deduce both $m_6,m_7,\ldots$ and additional 1-bit information about clock bits.
-Therefore, for $t\geq 6$, Zhang \etal guess $3(t-5)$ bits of information and the number of bit conditions in \eqref{eq:BCLpSystem} grows $4(t-5)$. 
+Therefore, for $t\geq 6$, Zhang \etal guess $3(t-5)$ bits of information and the number of bit conditions in \eqref{eq:BCLpSystem} grows $4(t-5)$.
 So the complexities for Zhang \etal's original attack is \eqref{eq:ZhangOriginComplexity}.
 \begin{equation}\label{eq:ZhangOriginComplexity}
 \begin{aligned}
@@ -567,9 +567,11 @@ Comp&=2^{40.92}+2^{24.21+3t-15}+\alpha \cdot 2^{24.21+3t-15+64-\beta}\\
 \end{aligned}
 \end{equation}
 where $\beta$ and $\alpha$ for this method is listed in Table \ref{tab:ZhangAlphaAndBetaOriginal}.
-As can be seen, the complexities are constantly larger than $2^{52}$, indicating that Zhang \etal's complexity evaluation in \cite{AC:Zhang19} is far too optimistic. 
-The lowest complexity is $2^{52.159}$ and it appears at $t=12$. 
-The memory complexity and the success probability of this attack is identical to those in  Section \ref{sec:OurRpRecovery}.
+In comparison with our guessing technique in Table \ref{tab:ZhangAlphaAndBeta}, the growth of $\alpha$ and $\beta$ are both faster.
+But such a difference cannot result in lower complexities.
+As can be seen, the complexities are constantly larger than $2^{52}$, indicating that Zhang \etal's complexity evaluation in \cite{AC:Zhang19} is far too optimistic and that the clock-bit-guessing technique is not superior to our movement-guessing one.
+The lowest complexity is $2^{52.159}$ and it appears at $t=12$.
+The memory complexity and the success probability of this attack is identical to those in  Section \ref{sec:OurRpRecovery} which are $2^{24.21}$ and 0.8942 respectively.
 
 \begin{table}[htbp]
   \centering
@@ -591,7 +593,7 @@ The memory complexity and the success probability of this attack is identical to
     \hline
     11    & 53.470 & -0.430 & 52.311 & 19    & 63.501 & -9.483 &  66.213\\
     \hline
-    12    & 56.494 & -0.570 & 52.159 & 20    & 63.834 & -12.293 &  69.210\\
+    12    & 56.494 & -0.570 & \textbf{52.159} & 20    & 63.834 & -12.293 &  69.210\\
     \hline
     13    & 58.436 & -0.752 & 53.073 & 21    & 63.980 & -15.476 &  72.210\\
     \hline
