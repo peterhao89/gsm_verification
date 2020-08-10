@@ -43,7 +43,7 @@ The success probability is 100\%.
 
 In addition to proposing our own attack, we revisit Zhang \etal's attack as well. 
 We fully implement the CP-recovery process of their attack and experimentally evaluate complexities of RP-recovery process as well. 
-We verify the incorrectness of Zhang \etal's attack: their complexities are far too optimistic and several critical parameters are wrongly evaluated due to their incorrect implementations.
+We verify the incorrectness of Zhang \etal's attack: their complexities are far too optimistic and several crucial parameters are wrongly evaluated due to their incorrect implementations.
 As a remedy, we provide detailed analysis along with correct complexity evaluations.  
 \keywords{stream ciphers, A5/1, guess-and-determine}
 \end{abstract}
@@ -56,7 +56,7 @@ As a remedy, we give detailed analysis to all the possible tradeoffs in the gues
 \section{Preliminary}
 In the 1st part of this section, we give a brief introduction to the keystream generation phase of the A5/1 stream cipher. 
 Then, in the 2nd part, we review the general process of Zhang \etal's attack in \cite{AC:Zhang19}.
-\subsection{The Keystream Generation Procedure of A5/1}
+\subsection{The Keystream Generation Procedure of A5/1}\label{sec:KSMA51}
 A5/1 has a 64-bit internal state consisting of 3 registers of sizes 19, 22, 23 respectively.
 We denote the 64-bit state at time $t$ ($t=0,1,2,\ldots$) as
 \begin{equation}\label{eq:StateAndRi}
@@ -106,7 +106,7 @@ Before generating the output bit $z_t$, A5/1 round function will update the inte
 Then, the output keystream bit $z_t$ is generated as
 \begin{equation}\label{eq:OutputZ}
 \begin{aligned}
-  z^t=&\vec{R1}^{t+1}[18]\oplus \vec{R2}^{t+1}[21]\oplus \vec{R3}^{t+1}[22]\\
+  z_t=&\vec{R1}^{t+1}[18]\oplus \vec{R2}^{t+1}[21]\oplus \vec{R3}^{t+1}[22]\\
   =&\vec{s}^{t+1}[18]\oplus \vec{s}^{t+1}[40]\oplus \vec{s}^{t+1}[63]
 \end{aligned}
 \end{equation}
@@ -114,7 +114,91 @@ In the remainder of this paper, we uniformly use $\vec{s}^t[i]$ to represent the
 
 \subsection{Zhang \etal's Attack in \cite{AC:Zhang19}}
 Zhang \etal's attack aims at recovering the whole init state $\vec{s}^0$. 
- consists of $\vec{R1}$
+They divide the 64 $\vec{s}^0$ bits into constraint part (CP) and the rest part (RP). 
+The CP part consists of 33 bits related to the 5 output bits $z_0,\ldots, z_4$. 
+The other $31$ bits are all categorized as RP. 
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.5\textwidth]{pic/MergeZhang.pdf}
+  \caption{The general process of Zhang's attack in \cite{AC:Zhang19}}\label{fig:MergeZhang}
+\end{figure}
+
+The most crucial step in Zhang \etal's attack in \cite{AC:Zhang19} is the recovery of the 33-bit CP based on the first 5 keystream bits $z_0,\ldots, z_4$. 
+Such a CP-recovery step can be summarized as the list-merging process in Fig. \ref{fig:MergeZhang}. 
+In Fig. \ref{fig:MergeZhang}, the list $L_{z_i\ldots z_j}$ ($i<j$) contains the state $\vec{s}^i$'s whose state bits are only partially known: 
+for each $\vec{s}^i\in L_{z_i\ldots z_j}$, the known bits are at positions $\lambda\subseteq [0,63]$ \st the knowledge of $\vec{s}^i[\lambda]$ can produce the consecutive output bits $z_i,\ldots, z_j$ following the A5/1 keystream generation process. 
+Specifically, for a list $L_{z_iz_{i+1}}$ at Level 1, 2 consecutive keystream bits $z_iz_{i+1}$ can be related to at most 15 state bits at positions $\lambda_1$ in \eqref{eq:KnownBitsL1}.
+\begin{equation}\label{eq:KnownBitsL1}
+\lambda_1=\{7,8,16,17,18,  28,29,38,39,40,  50,51,61,62,63\}
+\end{equation}
+The number of known state bits for 3, 4 and 5 consecutive keystream bits will grow to at most 21, 27 and 33 respectively. 
+Therefore, finally at Level 4, it is claimed by Zhang \etal in \cite{AC:Zhang19} each element $\vec{s}^0\in L_{z_0z_1z_2z_3}$ should contain 33 bits. 
+When merging two lists at the same level, the known bits at the overlapped positions are to be used as filters: only the elements share the same value at the overlapped positions can be merged as an element in the list in the next level. 
+Since each element in the lists contains at most 33 known bits, \cite{AC:Zhang19} claims that the elements in all lists can be stored with 5 bytes of memory. 
+However, Zhang \etal has never fully implement the process in Fig. \ref{fig:MergeZhang}: 
+they only implement the process from Level 1 to 2. 
+Without detailed analysis, Zhang \etal simply claim that the whole list merging process can be finished with a time complexity $2^{28.3}$ cipher ticks and the final list $L_{z_0z_1z_2z_3z_4}$ only contains $2^{16.6}$ elements. 
+
+Another feature of Zhang \etal's attack is the construction of the 4 initial lists: they employ the idea of near collision to construct the lists $L_{z_0z_1},\ldots, L_{z_3z_4}$. 
+They consider the low-hamming-weight internal state difference (ISD) $\Delta \vec{s}$ as follows:
+\begin{equation}\label{eq:LowWeightISD}
+  \mathcal{D}_2:=\left\{\Delta\vec{s}| hw(\Delta\vec{s})\leq 2 \text{ and } \Delta\vec{s}[i]=0  \text{ for all } i\notin\lambda_1 \right\}
+\end{equation}
+Apparently, there are $\binom{15}{0}+\binom{15}{1}+\binom{15}{2}=121$ elements in the ISD set $\mathcal{D}_2$ in \eqref{eq:LowWeightISD}. 
+But Zhang \etal find that only 99 ISDs $\mathcal{D}_2$ can result in the 2-bit output difference ${\tt 0x3}$. 
+Therefore, they store such 99 low-hamming-weight ISD's in a table $\mathcal{T}$ defined in \eqref{eq:99LowWeightISD}. 
+\begin{equation}\label{eq:99LowWeightISD}
+  \mathcal{T}:=\left\{\Delta\vec{s}\in \mathcal{D}_2|
+  \exists \vec{s}^0 \Rightarrow z_0z_1(\vec{s}^0)\oplus z_0z_1(\vec{s}^0\oplus \Delta\vec{s}) ={\tt 0x3}
+  \right\}
+\end{equation}
+For a static 2-bit output $z_0z_1$, 
+Zhang \etal propose Algorithm \ref{alg:getLz0z1} to generate list of states $L_{z_0z_1}$, making sure that all elements in the list can result in  $z_0z_1$ directly. 
+In Zhang \etal's attack, they set the number limit $T=4\cdot 2^{15}/99=1323$. 
+In order to improve the probability that the list contains the correct state, Zhang \etal further propose the distilling process.
+For positive integers $\eta$ and $\zeta$, the distilling process first generate $\eta\times \zeta$ lists with Algorithm \ref{alg:getLz0z1}; then, intersection and union operations are carried out as \eqref{eq:Distilling}.
+\begin{equation}\label{eq:Distilling}
+ L_{z_0z_1} \leftarrow 
+  \bigcup_{i=1}^{\eta}\left(\bigcap_{j=1}^\zeta L^{i,j}_{z_0z_1}\right)
+  \text{ where }
+  L^{i,j}_{z_0z_1}\leftarrow
+  {\tt getList}(z_0z_1, T)
+\end{equation}
+According to Zhang \etal, when $\eta=2, \zeta=6$, the correct state can be covered by $L_{z_0z_1}$ with probability 0.9835. 
+
+\begin{algorithm}[htbp]
+	\caption{Generate the internal states resulting in the given 2-bit output} \label{alg:getLz0z1}
+	\begin{algorithmic}[1]
+		\Procedure{{\tt getList}}{output bits $z_0z_1\in \mathbb{F}_2^2$, the number limit $T$}
+\State Initialize an empty list $L_{z_0z_1}\leftarrow \phi$
+\State Declare $\hat{z}_0\hat{z}_1\leftarrow z_0z_1\oplus {\tt 0x3}$
+\State Generate $T$ states $\vec{\hat{s}}^0$ that only have non-zero elements at positions $\lambda_1$ and can result in the output $\hat{z}_0\hat{z}_1$
+\For{$\Delta \vec{s}\in \mathcal{T}$}
+\State Construct state $\vec{s}^0$
+\If{$\vec{s}^0$ can result in the output $z_0z_1$}
+\State Update $L_{z_0z_1}\leftarrow L_{z_0z_1}\cup \{\vec{s}^0\}$
+\EndIf
+\EndFor
+\State \textbf{Return} $L_{z_0z_1}$
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+
+
+After the CP-recovery phase, the adversary has already acquire $2^{16.6}$ $\vec{s}^0$'s in $L_{z_0z_1z_2z_3}$. 
+For each such $\vec{s}^0$, the corresponding $\vec{s}^5$ can be directly with the knowledge of 33 bits in CP. 
+For RP-recovery, Zhang \etal guess the $3y$ clock bits in \eqref{eq:RpGuessZhang} and construct linear equations of unknown RP bits according both guesses and output bits $z_5,\ldots, z_{5+y-1}$.
+\begin{equation}\label{eq:RpGuessZhang}
+  \vec{s}^5[8,\ldots, 8-y+1, 29,\ldots, 29-y+1, 51,\ldots, 51-y+1]
+\end{equation} 
+They claim that the RP bits can be recovered with complexity approximately $2^{30}$ which is also the overall time complexity of the whole attack. 
+But there is no further details on how the different $y$'s can affect the complexities. 
+It is also unknown which $y$ should be used to filter out all wrong states. 
+
+We are to prove that almost all Zhang \etal's claims above are wrong in Section \ref{sec:ZhangWrongCompAnalysis}. 
+The analysis of $y$-effects are to be analyzed in detail in Section \ref{sec:ZhangRpRecovery} only to find that their complexity analysis is far too optimistic to be true. 
 
 \section{Move Patterns and Their Bit Condition Representations}\label{sec:MovePatternAndBC}
 For each step $t=0,1,2\ldots$, whether the registers $\vec{r_1},\vec{r_2},\vec{r_3}$ are updated or not depends on the three control bits $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$.
@@ -206,7 +290,7 @@ For each step $t$, there are 3 bit conditions: 2 are from one of \eqref{eq:Move0
 \vec{s}^{t+1}[18]\oplus \vec{s}^{t+1}[40]\oplus \vec{s}^{t+1}[63]=z^t
 \end{equation}
 So each move guess can deduce 3 bit conditions.
-As can be seen, the move conditions \eqref{eq:Move0BitCondition}, \eqref{eq:Move1BitCondition}, \eqref{eq:Move2BitCondition}, \eqref{eq:Move3BitCondition} and the output condition \eqref{eq:OutputBitCondition} correspond to the internal state at different time instance.
+As can be seen, the move conditions \eqref{eq:Move0BitCondition}, \eqref{eq:Move1BitCondition}, \eqref{eq:Move2BitCondition}, \eqref{eq:Move3BitCondition} and the output condition \eqref{eq:OutputBitCondition} correspond to the internal state at different time instances.
 But our attack is targeted to recovering the initial state $\vec{s}^0$.
 Therefore, we need to represent the internal states at different time instance $t$ with $\vec{s}^0$ so that the bit conditions are represented by $\vec{s}^0$ bits as well.
 With the knowledge of $m^0,\ldots, m^t$ guessed, each $\vec{s}^{t+1}$ bit can be expressed as a linear combination of $\vec{s}^0$ bits.
@@ -439,13 +523,8 @@ Therefore, the success probability of Zhang's attack is far too optimistic as we
 \end{table}%
 
 \subsection{Zhang's Wrong Evaluation to the CP-Recovery Complexities}\label{sec:ZhangWrongCompAnalysis}
-The most critical step of Zhang \etal's attack in \cite{AC:Zhang19} is recovering the CP-part of $\vec{s^0}$ containing 33 bits.
-Such CP-recovery is accomplished using a list-merging process in Fig. \ref{fig:MergeZhang}.
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.5\textwidth]{pic/MergeZhang.pdf}
-  \caption{The general process of Zhang's attack in \cite{AC:Zhang19}}\label{fig:MergeZhang}
-\end{figure}
+The most crucial step of Zhang \etal's attack in \cite{AC:Zhang19} is recovering the CP-part of $\vec{s^0}$ containing 33 bits.
+Such CP-recovery is accomplished using a list-merging process in Fig. \ref{fig:MergeZhang}. 
 The 4 lists $L_{z_0z_1},\ldots, L_{z_3z_4}$ are generated by Alg.5 and are of sizes 7835 according to \cite{AC:Zhang19} (such sizes are to be corrected to 7948 according to our experiments in Table \ref{tab:ProbInU}).
 Zhang \etal has not fully implement their attack.
 \cite{AC:Zhang19} only implement the steps from Level 1 to 2.
@@ -488,10 +567,7 @@ So the merging phase between $L_t$ and $L_{t+1}$ are as follows:
   \end{enumerate}
 \end{enumerate}
 According to the description above, any element $\vec{s}\in L$ should not only contain the value but the  positions of the known bits as well.
-At Level 1, since all list are generated through Alg3, all elements share the same known-bit positions
-\begin{equation}\label{eq:KnownBitsL1}
-\lambda=\{7,8,16,17,18,  28,29,38,39,40,  50,51,61,62,63\}
-\end{equation}
+At Level 1, since all list are generated through Alg3, all elements share the same known-bit positions in \eqref{eq:KnownBitsL1}
 But the following Example \ref{examp:DifferentMoveKnownBits} shows that different moves will result in different known bit positions.
 Example \ref{examp:DifferentMoveKnownBits} indicates that the known bits of the merged partial state $\vec{\tilde{s}^t}$ may not be exactly the 21 bits given in \cite{AC:Zhang19}: they are also likely to be subsets of the 21 bits.
 \begin{example}\label{examp:DifferentMoveKnownBits}
