@@ -542,8 +542,8 @@ The details of the following CP-recovery steps and the whole RP-recovery phase a
 
 To verify their attack, we fully implement their attack only to find several mistakes and the complexity evaluation to the whole attack is far too optimistic. 
 Section \ref{sec:ZhangWrongP1} and \ref{sec:ZhangWrongCompAnalysis} gives the wrong evaluations of several crucial parameters in \cite{AC:Zhang19}. 
-Section \ref{sec:OurRpRecovery} supplement Zhang \etal's attack with all the missing details in the CP-recovery phase and use our move guessing strategy for RP-recovery. 
-Section \ref{sec:ZhangRpRecovery} gives the complexity analysis to Zhang's original attack in \cite{AC:Zhang19} whose RP-recovery is using the clock guessing strategy. 
+Section \ref{sec:ZhangRpRecovery} supplements Zhang \etal's attack with all the missing details in the CP- and RP-recovery phases and gives a correct complexity evaluation to the original attack in \cite{AC:Zhang19}. 
+Section \ref{sec:OurRpRecovery} replaces Zhang \etal's clock-guess-based RP-recovery with our move-guess-based one to show the advantage of our technique.
 
 \subsection{Zhang's Wrong Evaluation to $p_1$ and the Success Probability}\label{sec:ZhangWrongP1}
 In \cite{AC:Zhang19}, Zhang \etal claim that, for $T=4\cdot 2^{15}/99$, a randomly constructed list $L_{z_0z_1}\leftarrow {\tt getList}(z_0z_1, T)$ acquired by calling Algorithm \ref{alg:getLz0z1} is of size 7963  and the correct internal state lies in $L_{z_0z_1}$ with probability $0.9835$.
