@@ -10,14 +10,23 @@
 \mainmatter
 % first the title is needed
 \title{State-Recovery Attacks on A5/1 with Negligible Memory Complexities}
-\author{Yonglin Hao\inst{1}}
+\author{Yonglin Hao\inst{1}\thanks{\email{haoyonglin@yeah.net} }
+\and
+Bin Zhang \inst{1,2,3,4}}
 \institute{
-	State Key Laboratory of Cryptology, P.O. Box 5159, Beijing 100878, China, \email{haoyonglin@yeah.net} }
+	State Key Laboratory of Cryptology, P.O. Box 5159, Beijing 100878, China
+\and
+	TCA, SKLCS, Institute of Software, Chinese Academy of Sciences
+\and
+University of Chinese Academy of Sciences, Beijing, 100049, China
+\and 
+State Key Laboratory of Information Security, Institute of Information Engineering,
+Chinese Academy of Sciences 
 %\and
-%	Ruhr University Bochum, Horst G{\"o}rtz Institute for IT Security, Germany, \email{gregor.leander@rub.de} \and
 %	FHNW, Windisch, Switzerland, \email{willimeier48@gmail.com} \and
 %	NTT Secure Platform Laboratories, Tokyo 180-8585, Japan, \email{yosuke.todo.xt@hco.ntt.co.jp} \and
-%	SnT, University of Luxembourg, Esch-sur-Alzette, Luxembourg, \email{qingju.wang@uni.lu}}
+%	SnT, University of Luxembourg, Esch-sur-Alzette, Luxembourg, \email{qingju.wang@uni.lu}
+}
 \maketitle
 
 
@@ -36,7 +45,7 @@ They divide the 64-bit A5/1 state into a CP part and a RP part, and recover them
 But such an attack has never been fully implemented leaving its correctness unknown.
 
 In this paper, we propose a series of state-recovery attacks on A5/1 with negligible memory complexities.
-The main idea is based on a movement-guessing technique and we maintain a system of linear bit conditions for distinguishing the correct state from the wrong ones.
+The main idea is based on a move-guessing technique and we maintain a system of linear bit conditions for distinguishing the correct state from the wrong ones.
 The memory complexity is just thousands of bits which is negligible.
 The time complexity can be as low as $2^{43.91}$ and the data complexity is only 32 bits.
 The success probability is 100\%.
