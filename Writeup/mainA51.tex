@@ -31,20 +31,20 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   Abstract   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-At Asiacrypt 2019, Zhang \etal proposed a state recovery attack on A5/1. 
+At Asiacrypt 2019, Zhang \etal proposed a state recovery attack on A5/1.
 They divide the 64-bit A5/1 state into a CP part and a RP part, and recover them separately with overall time \& memory complexities around $2^{30}$.
-But such an attack has never been fully implemented leaving its correctness unknown. 
+But such an attack has never been fully implemented leaving its correctness unknown.
 
-In this paper, we propose a series of state-recovery attacks on A5/1 with negligible memory complexities. 
-The main idea is based on a movement-guessing technique and we maintain a system of linear bit conditions for distinguishing the correct state from the wrong ones. 
-The memory complexity is just thousands of bits which is negligible. 
-The time complexity can be as low as $2^{43.91}$ and the data complexity is only 32 bits. 
-The success probability is 100\%. 
+In this paper, we propose a series of state-recovery attacks on A5/1 with negligible memory complexities.
+The main idea is based on a movement-guessing technique and we maintain a system of linear bit conditions for distinguishing the correct state from the wrong ones.
+The memory complexity is just thousands of bits which is negligible.
+The time complexity can be as low as $2^{43.91}$ and the data complexity is only 32 bits.
+The success probability is 100\%.
 
-In addition to proposing our own attack, we revisit Zhang \etal's attack as well. 
-We fully implement the CP-recovery process of their attack and experimentally evaluate complexities of RP-recovery process as well. 
+In addition to proposing our own attack, we revisit Zhang \etal's attack as well.
+We fully implement the CP-recovery process of their attack and experimentally evaluate complexities of RP-recovery process as well.
 We verify the incorrectness of Zhang \etal's attack: their complexities are far too optimistic and several crucial parameters are wrongly evaluated due to their incorrect implementations.
-As a remedy, we provide detailed analysis along with correct complexity evaluations.  
+As a remedy, we provide detailed analysis along with correct complexity evaluations.
 \keywords{stream ciphers, A5/1, guess-and-determine}
 \end{abstract}
 
@@ -54,7 +54,7 @@ As a remedy, we give detailed analysis to all the possible tradeoffs in the gues
 
 
 \section{Preliminary}
-In the 1st part of this section, we give a brief introduction to the keystream generation phase of the A5/1 stream cipher. 
+In the 1st part of this section, we give a brief introduction to the keystream generation phase of the A5/1 stream cipher.
 Then, in the 2nd part, we review the general process of Zhang \etal's attack in \cite{AC:Zhang19}.
 \subsection{The Keystream Generation Procedure of A5/1}\label{sec:KSMA51}
 A5/1 has a 64-bit internal state consisting of 3 registers of sizes 19, 22, 23 respectively.
@@ -113,10 +113,10 @@ Then, the output keystream bit $z_t$ is generated as
 In the remainder of this paper, we uniformly use $\vec{s}^t[i]$ to represent the $i$-th bit of the whole state and avoid using $\vec{R1}[j],\vec{R2}[k],\vec{R3}[\ell]$'s.
 
 \subsection{Zhang \etal's Attack in \cite{AC:Zhang19}}
-Zhang \etal's attack aims at recovering the whole init state $\vec{s}^0$. 
-They divide the 64 $\vec{s}^0$ bits into constraint part (CP) and the rest part (RP). 
-The CP part consists of 33 bits related to the 5 output bits $z_0,\ldots, z_4$. 
-The other $31$ bits are all categorized as RP. 
+Zhang \etal's attack aims at recovering the whole init state $\vec{s}^0$.
+They divide the 64 $\vec{s}^0$ bits into constraint part (CP) and the rest part (RP).
+The CP part consists of 33 bits related to the 5 output bits $z_0,\ldots, z_4$.
+The other $31$ bits are all categorized as RP.
 
 \begin{figure}[htbp]
   \centering
@@ -124,48 +124,48 @@ The other $31$ bits are all categorized as RP.
   \caption{The general process of Zhang's attack in \cite{AC:Zhang19}}\label{fig:MergeZhang}
 \end{figure}
 
-The most crucial step in Zhang \etal's attack in \cite{AC:Zhang19} is the recovery of the 33-bit CP based on the first 5 keystream bits $z_0,\ldots, z_4$. 
-Such a CP-recovery step can be summarized as the list-merging process in Fig. \ref{fig:MergeZhang}. 
-In Fig. \ref{fig:MergeZhang}, the list $L_{z_i\ldots z_j}$ ($i<j$) contains the state $\vec{s}^i$'s whose state bits are only partially known: 
-for each $\vec{s}^i\in L_{z_i\ldots z_j}$, the known bits are at positions $\lambda\subseteq [0,63]$ \st the knowledge of $\vec{s}^i[\lambda]$ can produce the consecutive output bits $z_i,\ldots, z_j$ following the A5/1 keystream generation process. 
+The most crucial step in Zhang \etal's attack in \cite{AC:Zhang19} is the recovery of the 33-bit CP based on the first 5 keystream bits $z_0,\ldots, z_4$.
+Such a CP-recovery step can be summarized as the list-merging process in Fig. \ref{fig:MergeZhang}.
+In Fig. \ref{fig:MergeZhang}, the list $L_{z_i\ldots z_j}$ ($i<j$) contains the state $\vec{s}^i$'s whose state bits are only partially known:
+for each $\vec{s}^i\in L_{z_i\ldots z_j}$, the known bits are at positions $\lambda\subseteq [0,63]$ \st the knowledge of $\vec{s}^i[\lambda]$ can produce the consecutive output bits $z_i,\ldots, z_j$ following the A5/1 keystream generation process.
 Specifically, for a list $L_{z_iz_{i+1}}$ at Level 1, 2 consecutive keystream bits $z_iz_{i+1}$ can be related to at most 15 state bits at positions $\lambda_1$ in \eqref{eq:KnownBitsL1}.
 \begin{equation}\label{eq:KnownBitsL1}
 \lambda_1=\{7,8,16,17,18,  28,29,38,39,40,  50,51,61,62,63\}
 \end{equation}
-The number of known state bits for 3, 4 and 5 consecutive keystream bits will grow to at most 21, 27 and 33 respectively. 
-Therefore, finally at Level 4, it is claimed by Zhang \etal in \cite{AC:Zhang19} each element $\vec{s}^0\in L_{z_0z_1z_2z_3}$ should contain 33 bits. 
-When merging two lists at the same level, the known bits at the overlapped positions are to be used as filters: only the elements share the same value at the overlapped positions can be merged as an element in the list in the next level. 
-Since each element in the lists contains at most 33 known bits, \cite{AC:Zhang19} claims that the elements in all lists can be stored with 5 bytes of memory. 
-However, Zhang \etal has never fully implement the process in Fig. \ref{fig:MergeZhang}: 
-they only implement the process from Level 1 to 2. 
-Without detailed analysis, Zhang \etal simply claim that the whole list merging process can be finished with a time complexity $2^{28.3}$ cipher ticks and the final list $L_{z_0z_1z_2z_3z_4}$ only contains $2^{16.6}$ elements. 
+The number of known state bits for 3, 4 and 5 consecutive keystream bits will grow to at most 21, 27 and 33 respectively.
+Therefore, finally at Level 4, it is claimed by Zhang \etal in \cite{AC:Zhang19} each element $\vec{s}^0\in L_{z_0z_1z_2z_3}$ should contain 33 bits.
+When merging two lists at the same level, the known bits at the overlapped positions are to be used as filters: only the elements share the same value at the overlapped positions can be merged as an element in the list in the next level.
+Since each element in the lists contains at most 33 known bits, \cite{AC:Zhang19} claims that the elements in all lists can be stored with 5 bytes of memory.
+However, Zhang \etal has never fully implement the process in Fig. \ref{fig:MergeZhang}:
+they only implement the process from Level 1 to 2.
+Without detailed analysis, Zhang \etal simply claim that the whole list merging process can be finished with a time complexity $2^{28.3}$ cipher ticks and the final list $L_{z_0z_1z_2z_3z_4}$ only contains $2^{16.6}$ elements.
 
-Another feature of Zhang \etal's attack is the construction of the 4 initial lists: they employ the idea of near collision to construct the lists $L_{z_0z_1},\ldots, L_{z_3z_4}$. 
+Another feature of Zhang \etal's attack is the construction of the 4 initial lists: they employ the idea of near collision to construct the lists $L_{z_0z_1},\ldots, L_{z_3z_4}$.
 They consider the low-hamming-weight internal state difference (ISD) $\Delta \vec{s}$ as follows:
 \begin{equation}\label{eq:LowWeightISD}
   \mathcal{D}_2:=\left\{\Delta\vec{s}| hw(\Delta\vec{s})\leq 2 \text{ and } \Delta\vec{s}[i]=0  \text{ for all } i\notin\lambda_1 \right\}
 \end{equation}
-Apparently, there are $\binom{15}{0}+\binom{15}{1}+\binom{15}{2}=121$ elements in the ISD set $\mathcal{D}_2$ in \eqref{eq:LowWeightISD}. 
-But Zhang \etal find that only 99 ISDs $\mathcal{D}_2$ can result in the 2-bit output difference ${\tt 0x3}$. 
-Therefore, they store such 99 low-hamming-weight ISD's in a table $\mathcal{T}$ defined in \eqref{eq:99LowWeightISD}. 
+Apparently, there are $\binom{15}{0}+\binom{15}{1}+\binom{15}{2}=121$ elements in the ISD set $\mathcal{D}_2$ in \eqref{eq:LowWeightISD}.
+But Zhang \etal find that only 99 ISDs $\mathcal{D}_2$ can result in the 2-bit output difference ${\tt 0x3}$.
+Therefore, they store such 99 low-hamming-weight ISD's in a table $\mathcal{T}$ defined in \eqref{eq:99LowWeightISD}.
 \begin{equation}\label{eq:99LowWeightISD}
   \mathcal{T}:=\left\{\Delta\vec{s}\in \mathcal{D}_2|
   \exists \vec{s}^0 \Rightarrow z_0z_1(\vec{s}^0)\oplus z_0z_1(\vec{s}^0\oplus \Delta\vec{s}) ={\tt 0x3}
   \right\}
 \end{equation}
-For a static 2-bit output $z_0z_1$, 
-Zhang \etal propose Algorithm \ref{alg:getLz0z1} to generate list of states $L_{z_0z_1}$, making sure that all elements in the list can result in  $z_0z_1$ directly. 
-In Zhang \etal's attack, they set the number limit $T=4\cdot 2^{15}/99=1323$. 
+For a static 2-bit output $z_0z_1$,
+Zhang \etal propose Algorithm \ref{alg:getLz0z1} to generate list of states $L_{z_0z_1}$, making sure that all elements in the list can result in  $z_0z_1$ directly.
+In Zhang \etal's attack, they set the number limit $T=4\cdot 2^{15}/99=1323$ which results in the output list size 7963 and the correct state can be covered by $L_{z_0z_1}$ with probability $p_1=0.9835$.
 In order to improve the probability that the list contains the correct state, Zhang \etal further propose the distilling process.
 For positive integers $\eta$ and $\zeta$, the distilling process first generate $\eta\times \zeta$ lists with Algorithm \ref{alg:getLz0z1}; then, intersection and union operations are carried out as \eqref{eq:Distilling}.
 \begin{equation}\label{eq:Distilling}
- L_{z_0z_1} \leftarrow 
+ L_{z_0z_1} \leftarrow
   \bigcup_{i=1}^{\eta}\left(\bigcap_{j=1}^\zeta L^{i,j}_{z_0z_1}\right)
   \text{ where }
   L^{i,j}_{z_0z_1}\leftarrow
   {\tt getList}(z_0z_1, T)
 \end{equation}
-According to Zhang \etal, when $\eta=2, \zeta=6$, the correct state can be covered by $L_{z_0z_1}$ with probability 0.9835. 
+According to Zhang \etal, when $\eta=2, \zeta=6$, the correct state can be covered by $L_{z_0z_1}$ with probability 0.9903.
 
 \begin{algorithm}[htbp]
 	\caption{Generate the internal states resulting in the given 2-bit output} \label{alg:getLz0z1}
@@ -187,115 +187,166 @@ According to Zhang \etal, when $\eta=2, \zeta=6$, the correct state can be cover
 
 
 
-After the CP-recovery phase, the adversary has already acquire $2^{16.6}$ $\vec{s}^0$'s in $L_{z_0z_1z_2z_3}$. 
-For each such $\vec{s}^0$, the corresponding $\vec{s}^5$ can be directly with the knowledge of 33 bits in CP. 
+After the CP-recovery phase, the adversary has already acquire $2^{16.6}$ $\vec{s}^0$'s in $L_{z_0z_1z_2z_3}$.
+For each such $\vec{s}^0$, the corresponding $\vec{s}^5$ can be directly with the knowledge of 33 bits in CP.
 For RP-recovery, Zhang \etal guess the $3y$ clock bits in \eqref{eq:RpGuessZhang} and construct linear equations of unknown RP bits according both guesses and output bits $z_5,\ldots, z_{5+y-1}$.
 \begin{equation}\label{eq:RpGuessZhang}
   \vec{s}^5[8,\ldots, 8-y+1, 29,\ldots, 29-y+1, 51,\ldots, 51-y+1]
-\end{equation} 
-They claim that the RP bits can be recovered with complexity approximately $2^{30}$ which is also the overall time complexity of the whole attack. 
-But there is no further details on how the different $y$'s can affect the complexities. 
-It is also unknown which $y$ should be used to filter out all wrong states. 
+\end{equation}
+They claim that the RP bits can be recovered with complexity approximately $2^{30}$ which is also the overall time complexity of the whole attack.
+But there is no further details on how the different $y$'s can affect the complexities.
+It is also unknown which $y$ should be used to filter out all wrong states.
 
-We are to prove that almost all Zhang \etal's claims above are wrong in Section \ref{sec:ZhangWrongCompAnalysis}. 
-The analysis of $y$-effects are to be analyzed in detail in Section \ref{sec:ZhangRpRecovery} only to find that their complexity analysis is far too optimistic to be true. 
+We are to prove that almost all Zhang \etal's claims above are wrong in Section \ref{sec:ZhangWrongCompAnalysis}.
+The analysis of $y$-effects are to be analyzed in detail in Section \ref{sec:ZhangRpRecovery} only to find that their complexity analysis is far too optimistic to be true.
 
 \section{Move Patterns and Their Bit Condition Representations}\label{sec:MovePatternAndBC}
-For each step $t=0,1,2\ldots$, whether the registers $\vec{r_1},\vec{r_2},\vec{r_3}$ are updated or not depends on the three control bits $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$.
-For all $2^3$ $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ values of, there are 4 possible movements.
-Each movement corresponds to 2 $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ values and can also be represented as linear equations of state bits, also referred as bit conditions.
-The 4 movements are denoted as Move 0-4 as follows:
+For each step $t=0,1,2\ldots$, whether the registers $\vec{R1},\vec{R2},\vec{R3}$ are updated or not depends on the three control bits $\vec{s}^t[8,29,51]$. %$(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$.
+For all $2^3$ $\vec{s}^t[8,29,51]$ values, there are 4 possible move patterns denoted as Move 0, 1, 2 and 3.
+Each movement corresponds to 2 $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ values and can also be represented as linear equations of state bits, which are also referred as the bit conditions.
+Move 0-4 and their bit conditions are defined as follows:
 \begin{description}
-  \item[Move 0] $\tt{updateR1}$, $\tt{updateR2}$ and $\tt{updateR3}$ are all called.
-  The corresponding $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ (or equivalently $(\vec{s^t}[8],\vec{s^t}[29],\vec{r_3^t}[51])$) values are $(0,0,0)$ and $(1,1,1)$.
+  \item[Move 0] $\tt{updateR1}$ in \eqref{eq:UpdateR1}, $\tt{updateR2}$ in \eqref{eq:UpdateR2} and $\tt{updateR3}$ in \eqref{eq:UpdateR3} are all called.
+  The $\vec{s}^t[8,29,51]$ values are $(0,0,0)$ and $(1,1,1)$.
   The bit conditions are:
   \begin{equation}\label{eq:Move0BitCondition}
-    \left\{
-    \begin{aligned}
-    &\vec{r_1^t}[8]=\vec{r_2^t}[10]\\
-    &\vec{r_1^t}[8]=\vec{r_3^t}[10]
-    \end{aligned}
-    \right.
-    \Leftrightarrow
-    \left\{
+        \left\{
     \begin{aligned}
     &\vec{s}^t[8]\oplus \vec{s}^t[29]=0\\
     &\vec{s}^t[8]\oplus \vec{s}^t[51]=0
     \end{aligned}
     \right.
-  \end{equation}
-  \item[Move 1] Only $\tt{updateR2}$ and $\tt{updateR3}$ are called.
-  The corresponding $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ (or equivalently $(\vec{s^t}[8],\vec{s^t}[29],\vec{r_3^t}[51])$) values are $(0,1,1)$ and $(1,0,0)$.
-  The bit conditions are:
-  \begin{equation}\label{eq:Move1BitCondition}
+    \Leftrightarrow
     \left\{
     \begin{aligned}
-    &\vec{r_1^t}[8]=\vec{r_2^t}[10]\oplus 1\\
-    &\vec{r_1^t}[8]=\vec{r_3^t}[10]\oplus 1
+    &\vec{R1}^t[8]=\vec{R2}^t[10]\\
+    &\vec{R1}^t[8]=\vec{R3}^t[10]
     \end{aligned}
     \right.
-    \Leftrightarrow
+  \end{equation}
+  \item[Move 1] Only $\tt{updateR2}$ and $\tt{updateR3}$ are called.
+  The $\vec{s}^t[8,29,51]$ values are $(0,1,1)$ and $(1,0,0)$.
+  The bit conditions are:
+  \begin{equation}\label{eq:Move1BitCondition}
     \left\{
     \begin{aligned}
     &\vec{s}^t[8] \oplus \vec{s}^t[29]=1\\
     &\vec{s}^t[8] \oplus \vec{s}^t[51]=1
     \end{aligned}
     \right.
-  \end{equation}
-  \item[Move 2] Only $\tt{updateR1}$ and $\tt{updateR3}$ are called. %($(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])=(\vec{s^t}[8],\vec{s^t}[29],\vec{r_3^t}[51])\in \{(0,1,1),(1,0,0)\}$)
-  The corresponding $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ (or equivalently $(\vec{s^t}[8],\vec{s^t}[29],\vec{r_3^t}[51])$) values are $(1,0,1)$ and $(0,1,0)$.
-  The bit conditions are:
-  \begin{equation}\label{eq:Move2BitCondition}
+    \Leftrightarrow
     \left\{
     \begin{aligned}
-    &\vec{r_1^t}[8]=\vec{r_2^t}[10]\oplus 1\\
-    &\vec{r_1^t}[8]=\vec{r_3^t}[10]
+    &\vec{R1}^t[8]=\vec{R2}^t[10]\oplus 1\\
+    &\vec{R1}^t[8]=\vec{R3}^t[10]\oplus 1
     \end{aligned}
     \right.
-    \Leftrightarrow
+  \end{equation}
+  \item[Move 2] Only $\tt{updateR1}$ and $\tt{updateR3}$ are called.
+  The $\vec{s}^t[8,29,51]$ values are $(1,0,1)$ and $(0,1,0)$.
+  The bit conditions are:
+  \begin{equation}\label{eq:Move2BitCondition}
     \left\{
     \begin{aligned}
     &\vec{s}^t[8]\oplus \vec{s}^t[29]=1\\
     &\vec{s}^t[8]\oplus \vec{s}^t[51]=0
     \end{aligned}
     \right.
-  \end{equation}
-  \item[Move 3] Only $\tt{updateR1}$ and $\tt{updateR2}$ are called.
-  %($(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])\in \{(0,1,1),(1,0,0)\}$)
-  The corresponding $(\vec{r_1^t}[8],\vec{r_2^t}[10],\vec{r_3^t}[10])$ (or equivalently $(\vec{s^t}[8],\vec{s^t}[29],\vec{r_3^t}[51])$) values are $(1,1,0)$ and $(0,0,1)$.
-  The bit conditions are:
-  \begin{equation}\label{eq:Move3BitCondition}
+    \Leftrightarrow
     \left\{
     \begin{aligned}
-    &\vec{r_1^t}[8]=\vec{r_2^t}[10]\\
-    &\vec{r_1^t}[8]=\vec{r_3^t}[10]\oplus 1
+    &\vec{R1}^t[8]=\vec{R2}^t[10]\oplus 1\\
+    &\vec{R1}^t[8]=\vec{R3}^t[10]
     \end{aligned}
     \right.
-    \Leftrightarrow
+  \end{equation}
+  \item[Move 3] Only $\tt{updateR1}$ and $\tt{updateR2}$ are called.
+  The $\vec{s}^t[8,29,51]$ values are $(1,1,0)$ and $(0,0,1)$.
+  The bit conditions are:
+  \begin{equation}\label{eq:Move3BitCondition}
     \left\{
     \begin{aligned}
     &\vec{s}^t[8]\oplus \vec{s}^t[29]=0\\
     &\vec{s}^t[8]\oplus \vec{s}^t[51]=1
     \end{aligned}
     \right.
+    \Leftrightarrow
+    \left\{
+    \begin{aligned}
+    &\vec{R1}^t[8]=\vec{R2}^t[10]\\
+    &\vec{R1}^t[8]=\vec{R3}^t[10]\oplus 1
+    \end{aligned}
+    \right.
   \end{equation}
 \end{description}
 We denote the movement $\vec{s}^t\rightarrow \vec{s}^{t+1}$ as $m^t\in \mathbb{F}_2^2= \{0,1,2,3\}$.
 So the movements corresponding to the output keystream bits $z^0,\ldots, z^t$ are $m^0,\ldots, m^t$.
-
-\section{Move Guesses and Bit Condition Deductions}\label{sec:OurGuessAndDetermine}
-In our guess and determine attack, for $t=0,1,...$, we first guess the movement $m^t$ corresponding to $\vec{s}^t\rightarrow \vec{s}^{t+1}$ and maintains a bit condition set $\mathcal{BC}$ by adding new bit conditions corresponding to the new movement $m^t$ and the output $z^t$.
+In our guess and determine attack, we first guess the movement $m^t$ corresponding to $\vec{s}^t\rightarrow \vec{s}^{t+1}$ and maintains a bit condition set $\mathcal{BC}$ by adding new bit conditions corresponding to the new movement $m^t$ and the output $z^t$.
 For each step $t$, there are 3 bit conditions: 2 are from one of \eqref{eq:Move0BitCondition}, \eqref{eq:Move1BitCondition}, \eqref{eq:Move2BitCondition}, \eqref{eq:Move3BitCondition} according to the move guess and the rest is from the output $z^t$ as
 \begin{equation}\label{eq:OutputBitCondition}
 \vec{s}^{t+1}[18]\oplus \vec{s}^{t+1}[40]\oplus \vec{s}^{t+1}[63]=z^t
 \end{equation}
 So each move guess can deduce 3 bit conditions.
+In Section \ref{sec:OurGuessAndDetermine}, we guess the moves $m^0,\ldots, m^{t-1}$ and maintain a bit condition system to distinguish the correct state $\vec{s}^0$ from the wrong ones.
+
+
+\section{Move Guessing v.s. Clock Guessing}
+Our move guessing method differs from the previous guessing strategies.
+In \cite{AC:Zhang19} as well as all previous A5/1 cryptanalysis papers, the adversary guesses directly the 3 clock bits $\vec{s}^t[8,29,51]$ rather than the 2-bit move $m^t$.
+Apparently, our 2 move bits can be deduced from the 3 clock bits.
+Let $m^t[0,1]=(\mu, \nu)\in \mathbb{F}_2^2$ and the corresponding clock bits are $\vec{s}^t[8,29,51]=(\rho,\varrho, \sigma)\in \mathbb{F}_2^3$, the two bits $(\mu, \nu)$ can be deduced from $(\rho,\varrho, \sigma)$ as \eqref{eq:MoveAndClockBitRelation}
+\begin{equation}\label{eq:MoveAndClockBitRelation}
+\begin{aligned}
+  \mu=\bar{\rho}\bar{\varrho}\sigma \oplus
+  \bar{\rho}\varrho \sigma \oplus
+  \rho \bar{\varrho} \bar{\sigma} \oplus
+  \rho \varrho \bar{\sigma} \\
+  \nu=\bar{\rho}\bar{\varrho}\sigma \oplus
+  \bar{\rho}\varrho\bar{\sigma} \oplus
+  \rho\bar{\varrho}\sigma \oplus
+  \rho \varrho \bar{\sigma}
+\end{aligned}
+\end{equation}
+where $\bar{x}$ is the NOT operation equivalent to $x\oplus 1$.
+From the bit condition point of view, a 3-bit guess  $\vec{s}^t[8,29,51]=(\rho,\varrho, \sigma)$ is naturally 3 bit conditions.
+The 3 bit conditions are also equivalent to 2 move-oriented  bit conditions and a bit value condition $\vec{s}^t[8]=\rho$.
+For example, if the clock bit values are of the form $\vec{s}^t[8,29,51]=(\rho, \rho, \rho)$, which corresponds to the Move 0, the 3 bit conditions can also be regarded as adding $\vec{s}^t[8]=\rho$ to the Move 0 constraints in \eqref{eq:Move0BitCondition} as shown in \eqref{eq:ClockMove0Equiv}.
+\begin{equation}\label{eq:ClockMove0Equiv}
+  \left\{
+  \begin{aligned}
+    &\vec{s}^t[8]=\rho\\
+    &\vec{s}^t[29]=\rho\\
+    &\vec{s}^t[51]=\rho
+  \end{aligned}
+  \right.
+  \Leftrightarrow
+  \left\{
+    \begin{aligned}
+  &\vec{s}^t[8]=\rho\\
+  &\left\{
+  \begin{aligned}
+    &\vec{s}^t[8]\oplus\vec{s}^t[29]=0\\
+    &\vec{s}^t[8]\oplus\vec{s}^t[51]=0
+  \end{aligned}
+  \right.
+    \end{aligned}
+  \right.
+\end{equation}
+Such an equivalence is also true for other clock bit values and move patterns.
+Adding the bit condition of the output in \eqref{eq:OutputBitCondition}, we know that each 3-bit guess of the clock bits $\vec{s}^t[8,29,51]$ can deduce 4 bit conditions while each of our 2-bit guess of $m^t$ can deduce 3 bit conditions.
+On average, our move guessing method seems more efficient because each move guess can result in 1.5 bit conditions while the number of bit condition for each clock bit guess is no more than 1.34.
+But it remains to be checked whether the clock-oriented bit conditions can also be better filters for eliminating wrong internal states.
+To make fair comparison between the two strategies, we apply both move and clock guessing strategy in the RP-recovery phase of Zhang \etal's attack in \cite{AC:Zhang19}.
+The results show that move guessing can result in slightly lower complexities than its clock counterpart.
+Details can be seen later in Section \ref{sec:OurRpRecovery} and \ref{sec:ZhangRpRecovery}.
+
+\section{Our State-Recovery Attack based on the Move Guessing Strategy}\label{sec:OurGuessAndDetermine}
 As can be seen, the move conditions \eqref{eq:Move0BitCondition}, \eqref{eq:Move1BitCondition}, \eqref{eq:Move2BitCondition}, \eqref{eq:Move3BitCondition} and the output condition \eqref{eq:OutputBitCondition} correspond to the internal state at different time instances.
 But our attack is targeted to recovering the initial state $\vec{s}^0$.
 Therefore, we need to represent the internal states at different time instance $t$ with $\vec{s}^0$ so that the bit conditions are represented by $\vec{s}^0$ bits as well.
-With the knowledge of $m^0,\ldots, m^t$ guessed, each $\vec{s}^{t+1}$ bit can be expressed as a linear combination of $\vec{s}^0$ bits.
-Since each linear combination of $\vec{s}^0$ bits can be regarded as a inner-product of $\vec{s}^0$ and a 64-bit word $\vec w\in \mathbb{F}_2^{64}$, we can track each $\vec{s}^0,\ldots, \vec{s}^t, \vec{s}^{t+1}$ bits with 64 64-bit words denoted as $W^0,\ldots, W^t, W^{t+1}\in (\mathbb{F}_2^{64})^{64}$.
-The initial $W^0$ corresponds to $\vec{s}^0$ is defined naturally as
+With the knowledge of $m^0,\ldots, m^{t-1}$, $\vec{s}^{t}$ can be iteratively deduced from $\vec{s}^{0}$ and each $\vec{s}^{t}$ bit can be expressed as a linear combination of $\vec{s}^0$ bits. 
+Since a linear combination of $\vec{s}^0$ bits can also be regarded as a inner-product of $\vec{s}^0$ and a 64-bit word $\vec w\in \mathbb{F}_2^{64}$, we can track each $\vec{s}^0,\ldots, \vec{s}^t$ bits with 64 64-bit words denoted as $W^0,\ldots, W^t\in (\mathbb{F}_2^{64})^{64}$.
+The initial $W^0$ corresponds to $\vec{s}^0$ is defined naturally as \eqref{eq:W0ofS0}
 \begin{equation}\label{eq:W0ofS0}
   W^0=(\vec e_0, \ldots, \vec e_{63}), \text{ where } \vec e_i[j]=\left\{
   \begin{split}
@@ -305,9 +356,9 @@ The initial $W^0$ corresponds to $\vec{s}^0$ is defined naturally as
   \right.\text{ for }i=0,\ldots, 63
 \end{equation}
 so as to make sure $W^0[i]\cdot \vec{s^0}=\vec{e}_i\cdot \vec{s}^0=\vec{s}^0[i]$ for $i=0,\ldots, 63$.
-With $W^0,\ldots, W^t$, the $W^{t+1}$ can be deduced from $W^t$ according to the movement $m^t$ by calling
-$W^{t+1}\leftarrow {\tt UpdW}(m^t, W^t)$ described in Algorithm \ref{alg:updateW}.
-With the knowledge of $W^t$, the state bit of $\vec{s^t}$ can be uniformly expressed as a linear combination of $\vec{s}^0$ bits as
+With $W^0,\ldots, W^{t-1}$, the word vector $W^{t}$ can be deduced from $W^{t-1}$ according to the movement $m^{t=1}$ by calling
+$W^{t}\leftarrow {\tt UpdW}(m^{t-1}, W^{t-1})$ described in Algorithm \ref{alg:updateW}.
+With the knowledge of $W^t$, each state bit of $\vec{s}^t$ can be uniformly expressed as a linear combination of $\vec{s}^0$ bits as
 \begin{equation}\label{eq:ExpressStwithS0}
 \vec{s}^t[i]=W^t[i]\cdot \vec{s}^0
 \end{equation}
@@ -316,24 +367,30 @@ The bit condition set $\mathcal{BC}$ can be regarded as a linear equation system
 \begin{equation}\label{eq:BCLpSystem}
   A\vec x^T=\vec b^T, \text{ where } A\in \mathbb{F}_2^{3t\times 64}, \vec x\in \mathbb{F}_2^{64}, \vec b\in \mathbb{F}_2^{3t}
 \end{equation}
-and the solutions to the linear system in \eqref{eq:BCLpSystem} is exactly the possible values of the internal state $\vec{s}^0$.
+and the solutions to the linear system in \eqref{eq:BCLpSystem} is exactly the possible values of the internal state $\vec{s}^0$'s resulting in the output keystream bits $z_0,\ldots, z_{t-1}$.
 The number of solutions to \eqref{eq:BCLpSystem} depends on the order of the matrix $A$ and its extended matrix
 \begin{equation}\label{eq:ExtendedMatrixOfA}
   E=[A,\vec b^T]
 \end{equation}
 If $order(A)=order(E)$, there will be $2^{64-order(A)}$ solutions; otherwise, there will be no solutions at all.
-Apparently, the matrix $A$ and the vector $\vec b$ are both deduced according to the movements $m^0,\ldots, m^{t-1}$ and the output bits $z^0,\ldots, z^{t-1}$.
-Since the output $z^0,\ldots, z^{t-1}$ are known, in order to recover the internal state $\vec{s}^0$, our guess and determine attack suggest us to guess the movements, deduce the possible $\vec s^0$ values by solving the linear system in \eqref{eq:BCLpSystem} and determine the exact $\vec{s}^0$ with some additional output bits, say $z^{t},\ldots, z^{\ell-1}$ generated by the encryption oracle.
-The general process of our guess and determine attack is as follows:
+Apparently, the matrix $A$ and the vector $\vec b$ are both deduced according to the move guesses $m^0,\ldots, m^{t-1}$ and the output bits $z^0,\ldots, z^{t-1}$. 
+For the correct guess of $m^0,\ldots, m^{t-1}$, the relation $order(A)=order(E)$ holds constantly; for the wrong guesses, however, there should be a probability $1-\alpha_t$ ($0\geq \alpha_t\leq 1$) that $order(A)\neq order(E)$. 
+Based on such a finding, the general process of our state-recovery attack can be divided naturally into 3 main steps:
+\begin{description}
+  \item[S1] Guess moves $m^0,\ldots, m^{t-1}$ and maintain a bit-condition-based linear system in \eqref{eq:BCLpSystem}
+  \item[S2] Do the matrix order test and discard the wrong guesses satisfying  $order(A)\neq order(E)$
+  \item[S3] Deduce the remaining $\vec{s}^0$ candidates and identify the correct $\vec{s}^0$ with additional output bits $z^{t},\ldots, z^{\ell-1}$ generated by the encryption oracle
+\end{description}
+Therefore, the detailed description of our move-guessing-based state-recovery attack is as follows:
 \begin{enumerate}
   \item Query the A5/1 encryption oracle for $\ell$ keystream bits $z^0,\ldots, z^{\ell-1}$
   \item Initialize an empty set $\mathcal{S}$ of $\vec{s}^0$ candidates
-  \item For some $t<\ell$, we guess the $2^{2t}$ movements $(m^0,\ldots, m^{t-1})$, acquire the bit conditions $\mathcal{BC}\leftarrow {\tt getBC}((m^0,\ldots, m^{t-1}), (z^0,\ldots, z^{t-1}))$ by calling Algorithm \ref{alg:getBC} and do the following substeps:
+  \item For some $t<\ell$, we guess the $2^{2t}$ movements $(m^0,\ldots, m^{t-1})$, acquire the bit conditions $\mathcal{BC}\leftarrow {\tt getBC}((m^0,\ldots, m^{t-1}), (z^0,\ldots, z^{t-1}))$ by calling Algorithm \ref{alg:getBC} (\textbf{S1}) and do the following substeps:
       \begin{enumerate}
         \item Deduce the $A$ and $\vec b$ in \eqref{eq:BCLpSystem} according to $\mathcal{BC}$ and compute the extended matrix $E$ in \eqref{eq:ExtendedMatrixOfA}
-        \item Compute $order(A)$ and $order(E)$, if $order(A)\neq order(E)$, such a movement guess is wrong, go back to Step 2 for the next movement guess
+        \item Compute $order(A)$ and $order(E)$, if $order(A)\neq order(E)$, such a movement guess is wrong, go back to Step 2 for the next movement guess (\textbf{S2})
         \item For all $2^{64-order(A)}$ solutions to $A\vec x^T=b^T$, set $\vec{\hat{s}}^0\leftarrow \vec x$ and generate the keystream bits $\hat{z}^0,\ldots, \hat{z}^{t-1},\hat{z}^{t},\ldots, \hat{z}^{\ell-1}$
-        \item If $(\hat{z}^{t},\ldots, \hat{z}^{\ell-1})=(z^{t},\ldots, z^{\ell-1})$, add such $\vec{\hat{s}}^0$ into $\mathcal{S}$
+        \item If $(\hat{z}^{t},\ldots, \hat{z}^{\ell-1})=(z^{t},\ldots, z^{\ell-1})$, add such $\vec{\hat{s}}^0$ into $\mathcal{S}$ (\textbf{S3})
       \end{enumerate}
   \item Return $\mathcal{S}$
 \end{enumerate}
@@ -350,14 +407,13 @@ With $\alpha_t ,\beta_t $, the averaging time complexity can be computed as foll
 We randomly select $2^{30}$ $((m^0,\ldots, m^{t-1}), (z^0,\ldots, z^{t-1}))$ pairs and do the 3.(b) test to compute the averaging $\alpha_t$ and $\beta_t$ for $t$'s.
 We find that when $t<14$, $\alpha_t$ are larger than 0.5 ($\log\alpha_t\geq -1$) and $\beta_t\leq 3t$ so the overall complexity is constantly larger than $2^{50}$.
 For $14\leq t\leq 29$, the $\alpha_t$, $\beta_t$ and $Comp$ are listed in Table \ref{tab:AlphaAndBeta}.
-As can be seen, the lowest complexity appears at $t=21$ with $Comp=2^{43.91}$.
-The memory complexity is only $\mathcal{BC}$ and the corresponding matrix $A$ as well as its extended matrix $E$ in \eqref{eq:BCLpSystem} and \eqref{eq:ExtendedMatrixOfA}.
-The memory complexity is only $O(t)$.
+As can be seen, the lowest time complexity appears at $t=21$ with $Comp=2^{43.91}$.
 As can be seen in Table \ref{tab:AlphaAndBeta}, the order $\beta_t$ has already climbed to almost 64 for $t=27$.
-So we can safely set $\ell=32$ to filter the wrong movement guesses.
-According to our experiment, $\ell=32$ is well enough to identify the correct $\vec{s}^0$.
-
-
+So we can safely set $\ell=32$ to filter the wrong move guesses.
+According to our experiment, $\ell=32$ is well enough to identify the correct $\vec{s}^0$ so the data complexity of our attack is only 32 bits.
+The memory complexity is only $\mathcal{BC}$ and the corresponding matrix $A$ as well as its extended matrix $E$ in \eqref{eq:BCLpSystem} and \eqref{eq:ExtendedMatrixOfA}.
+The memory complexity is only $O(t)$ and, to be more specific, $2\cdot (64+1)\cdot 3t\leq 12480$ bits which is bounded by 2KB.
+So the memory complexity is practical and negligible in comparison with previous attacks. 
 
 \begin{table}[htbp]
   \centering
@@ -474,7 +530,7 @@ where $(\delta(m^i), \varrho(m^i))=(0,0),(1,1),(1,0),(0,1)$ for $m_i=0,1,2,3$ re
 Zhang \etal's attack in \cite{AC:Zhang19} claim to have a practical complexity but they only implemented the very 1st stage of their attack leaving it unknown whether the whole attack can work as claimed.
 To verify their attack, we fully implement their attack only to find several mistakes and the complexity evaluation to the whole attack is far too optimistic.
 \subsection{Zhang's Wrong Evaluation to $p_1$ and the Success Probability}\label{sec:ZhangWrongP1}
-In \cite{AC:Zhang19}, they claim that for a randomly constructed list $L_{z_0z_1}$ of size $4\cdot 2^{15}/99=7963$, the correct internal state can be covered with probability $0.9835$.
+In \cite{AC:Zhang19}, they claim that for a randomly constructed list $L_{z_0z_1}$ of size 7963, the correct internal state can be covered with probability $0.9835$.
 However, we repeat the experiment $10^6$ times and the correct init state lies in $L_{z_0z_1}$ for only 972436 times.
 So it is safe for us to claim that the actual $p_1$ is $0.9725$: Zhang's evaluation in \cite{AC:Zhang19} is far too optimistic.
 The reason why Zhang made such a mistake is unknown.
@@ -524,7 +580,7 @@ Therefore, the success probability of Zhang's attack is far too optimistic as we
 
 \subsection{Zhang's Wrong Evaluation to the CP-Recovery Complexities}\label{sec:ZhangWrongCompAnalysis}
 The most crucial step of Zhang \etal's attack in \cite{AC:Zhang19} is recovering the CP-part of $\vec{s^0}$ containing 33 bits.
-Such CP-recovery is accomplished using a list-merging process in Fig. \ref{fig:MergeZhang}. 
+Such CP-recovery is accomplished using a list-merging process in Fig. \ref{fig:MergeZhang}.
 The 4 lists $L_{z_0z_1},\ldots, L_{z_3z_4}$ are generated by Alg.5 and are of sizes 7835 according to \cite{AC:Zhang19} (such sizes are to be corrected to 7948 according to our experiments in Table \ref{tab:ProbInU}).
 Zhang \etal has not fully implement their attack.
 \cite{AC:Zhang19} only implement the steps from Level 1 to 2.
