@@ -19,9 +19,9 @@ Bin Zhang \inst{1,2,3,4}}
 	TCA, SKLCS, Institute of Software, Chinese Academy of Sciences
 \and
 University of Chinese Academy of Sciences, Beijing, 100049, China
-\and 
+\and
 State Key Laboratory of Information Security, Institute of Information Engineering,
-Chinese Academy of Sciences 
+Chinese Academy of Sciences
 %\and
 %	FHNW, Windisch, Switzerland, \email{willimeier48@gmail.com} \and
 %	NTT Secure Platform Laboratories, Tokyo 180-8585, Japan, \email{yosuke.todo.xt@hco.ntt.co.jp} \and
@@ -200,12 +200,13 @@ After the CP-recovery phase, the adversary has already acquire $2^{16.6}$ $\vec{
 For each such $\vec{s}^0$, the corresponding $\vec{s}^5$ can be directly with the knowledge of 33 bits in CP.
 For RP-recovery, Zhang \etal guess the $3y$ clock bits in \eqref{eq:RpGuessZhang} and construct linear equations of unknown RP bits according both guesses and output bits $z_5,\ldots, z_{5+y-1}$.
 \begin{equation}\label{eq:RpGuessZhang}
-  \vec{s}^5[8,\ldots, 8-y+1, 29,\ldots, 29-y+1, 51,\ldots, 51-y+1]
+  \vec{s}^5[8,29,51], \ldots, \vec {s}^{5+y-1}[8,29,51]
 \end{equation}
 They claim that the RP bits can be recovered with complexity approximately $2^{30}$ which is also the overall time complexity of the whole attack.
-But there is no further details on how the different $y$'s can affect the complexities.
-It is also unknown which $y$ should be used to filter out all wrong states.
-
+But there is no further details on how the different $y$'s can affect the complexities. 
+It is unknown how effective the linear equation system can be in filtering wrong states. 
+It is also unknown which $y$ should be used to identify the uniquely correct internal state $\vec{s}^0$.
+ 
 We are to prove that almost all Zhang \etal's claims above are wrong in Section \ref{sec:ZhangWrongCompAnalysis}.
 The analysis of $y$-effects are to be analyzed in detail in Section \ref{sec:ZhangRpRecovery} only to find that their complexity analysis is far too optimistic to be true.
 
@@ -353,7 +354,7 @@ Details can be seen later in Section \ref{sec:OurRpRecovery} and \ref{sec:ZhangR
 As can be seen, the move conditions \eqref{eq:Move0BitCondition}, \eqref{eq:Move1BitCondition}, \eqref{eq:Move2BitCondition}, \eqref{eq:Move3BitCondition} and the output condition \eqref{eq:OutputBitCondition} correspond to the internal state at different time instances.
 But our attack is targeted to recovering the initial state $\vec{s}^0$.
 Therefore, we need to represent the internal states at different time instance $t$ with $\vec{s}^0$ so that the bit conditions are represented by $\vec{s}^0$ bits as well.
-With the knowledge of $m^0,\ldots, m^{t-1}$, $\vec{s}^{t}$ can be iteratively deduced from $\vec{s}^{0}$ and each $\vec{s}^{t}$ bit can be expressed as a linear combination of $\vec{s}^0$ bits. 
+With the knowledge of $m^0,\ldots, m^{t-1}$, $\vec{s}^{t}$ can be iteratively deduced from $\vec{s}^{0}$ and each $\vec{s}^{t}$ bit can be expressed as a linear combination of $\vec{s}^0$ bits.
 Since a linear combination of $\vec{s}^0$ bits can also be regarded as a inner-product of $\vec{s}^0$ and a 64-bit word $\vec w\in \mathbb{F}_2^{64}$, we can track each $\vec{s}^0,\ldots, \vec{s}^t$ bits with 64 64-bit words denoted as $W^0,\ldots, W^t\in (\mathbb{F}_2^{64})^{64}$.
 The initial $W^0$ corresponds to $\vec{s}^0$ is defined naturally as \eqref{eq:W0ofS0}
 \begin{equation}\label{eq:W0ofS0}
@@ -382,8 +383,8 @@ The number of solutions to \eqref{eq:BCLpSystem} depends on the order of the mat
   E=[A,\vec b^T]
 \end{equation}
 If $order(A)=order(E)$, there will be $2^{64-order(A)}$ solutions; otherwise, there will be no solutions at all.
-Apparently, the matrix $A$ and the vector $\vec b$ are both deduced according to the move guesses $m^0,\ldots, m^{t-1}$ and the output bits $z^0,\ldots, z^{t-1}$. 
-For the correct guess of $m^0,\ldots, m^{t-1}$, the relation $order(A)=order(E)$ holds constantly; for the wrong guesses, however, there should be a probability $1-\alpha_t$ ($0\geq \alpha_t\leq 1$) that $order(A)\neq order(E)$. 
+Apparently, the matrix $A$ and the vector $\vec b$ are both deduced according to the move guesses $m^0,\ldots, m^{t-1}$ and the output bits $z^0,\ldots, z^{t-1}$.
+For the correct guess of $m^0,\ldots, m^{t-1}$, the relation $order(A)=order(E)$ holds constantly; for the wrong guesses, however, there should be a probability $1-\alpha_t$ ($0\geq \alpha_t\leq 1$) that $order(A)\neq order(E)$.
 Based on such a finding, the general process of our state-recovery attack can be divided naturally into 3 main steps:
 \begin{description}
   \item[S1] Guess moves $m^0,\ldots, m^{t-1}$ and maintain a bit-condition-based linear system in \eqref{eq:BCLpSystem}
@@ -422,7 +423,7 @@ So we can safely set $\ell=32$ to filter the wrong move guesses.
 According to our experiment, $\ell=32$ is well enough to identify the correct $\vec{s}^0$ so the data complexity of our attack is only 32 bits.
 The memory complexity is only $\mathcal{BC}$ and the corresponding matrix $A$ as well as its extended matrix $E$ in \eqref{eq:BCLpSystem} and \eqref{eq:ExtendedMatrixOfA}.
 The memory complexity is only $O(t)$ and, to be more specific, $2\cdot (64+1)\cdot 3t\leq 12480$ bits which is bounded by 2KB.
-So the memory complexity is practical and negligible in comparison with previous attacks. 
+So the memory complexity is practical and negligible in comparison with previous attacks.
 
 \begin{table}[htbp]
   \centering
@@ -536,20 +537,20 @@ where $(\delta(m^i), \varrho(m^i))=(0,0),(1,1),(1,0),(0,1)$ for $m_i=0,1,2,3$ re
 
 
 \section{Revisit Zhang's Attack in \cite{AC:Zhang19}}
-As has been briefly mentioned in Section \ref{sec:BriefReviewZhangAttack}, Zhang \etal has never fully implemented their attack in \cite{AC:Zhang19}: 
-they only implement the 1st step of the CP-recovery phase, which is Level 1 to 2 in Fig. \ref{fig:MergeZhang}. 
-The details of the following CP-recovery steps and the whole RP-recovery phase are absent, leaving it unknown whether the whole attack can work as claimed. 
+As has been briefly mentioned in Section \ref{sec:BriefReviewZhangAttack}, Zhang \etal has never fully implemented their attack in \cite{AC:Zhang19}:
+they only implement the 1st step of the CP-recovery phase, which is Level 1 to 2 in Fig. \ref{fig:MergeZhang}.
+The details of the following CP-recovery steps and the whole RP-recovery phase are absent, leaving it unknown whether the whole attack can work as claimed.
 
-To verify their attack, we fully implement their attack only to find several mistakes and the complexity evaluation to the whole attack is far too optimistic. 
-Section \ref{sec:ZhangWrongP1} and \ref{sec:ZhangWrongCompAnalysis} gives the wrong evaluations of several crucial parameters in \cite{AC:Zhang19}. 
-Section \ref{sec:ZhangRpRecovery} supplements Zhang \etal's attack with all the missing details in the CP- and RP-recovery phases and gives a correct complexity evaluation to the original attack in \cite{AC:Zhang19}. 
+To verify their attack, we fully implement their attack only to find several mistakes and the complexity evaluation to the whole attack is far too optimistic.
+Section \ref{sec:ZhangWrongP1} and \ref{sec:ZhangWrongCompAnalysis} gives the wrong evaluations of several crucial parameters in \cite{AC:Zhang19}.
+Section \ref{sec:ZhangRpRecovery} supplements Zhang \etal's attack with all the missing details in the CP- and RP-recovery phases and gives a correct complexity evaluation to the original attack in \cite{AC:Zhang19}.
 Section \ref{sec:OurRpRecovery} replaces Zhang \etal's clock-guess-based RP-recovery with our move-guess-based one to show the advantage of our technique.
 
 \subsection{Zhang's Wrong Evaluation to $p_1$ and the Success Probability}\label{sec:ZhangWrongP1}
 In \cite{AC:Zhang19}, Zhang \etal claim that, for $T=4\cdot 2^{15}/99$, a randomly constructed list $L_{z_0z_1}\leftarrow {\tt getList}(z_0z_1, T)$ acquired by calling Algorithm \ref{alg:getLz0z1} is of size 7963  and the correct internal state lies in $L_{z_0z_1}$ with probability $0.9835$.
 However, we repeat the experiment $10^6$ times and the correct state lies in $L_{z_0z_1}$ for only 972436 times.
 So it is safe for us to claim that the actual $p_1$ is $0.9725$: Zhang's evaluation in \cite{AC:Zhang19} is far too optimistic.
-The reason why Zhang \etal made such a mistake is unknown. 
+The reason why Zhang \etal made such a mistake is unknown.
 Maybe their using RC4 as the source of randomness is not so qualified.
 Our experiments have tried various random generators including Snow-V, AES, the NSF standard random number generator etc.
 All these experiments reveal that the actual $p_1$ is 0.9725 rather than 0.9835: Zhang's evaluation in \cite{AC:Zhang19} is wrong.
@@ -558,7 +559,7 @@ With the corrected $p_1$, the probability for a distilled list $U$ in \eqref{eq:
 The corrected evaluation and as well as shown in Table \ref{tab:ProbInU}.
 We read the source code\footnote{\url{https://github.com/martinzhangbin}} corresponding to \cite{AC:Zhang19} carefully only to find that the $|U|$ parameter is wrong because of wrong implementation:
 when they try to get $(\eta , \zeta)$, they actually do $\zeta$ intersect operations so they actually acquire the $U(\eta,\zeta+1)$ instead.
-As a consequence, the size $|U|$'s are smaller than expected. 
+As a consequence, the size $|U|$'s are smaller than expected.
 Since the attack can only succeed when the correct internal state lies in $U$, so the parameter ${\tt Prob.}$ in Table \ref{tab:ProbInU} is actually the success probability to the whole attack.
 Therefore, the success probability of Zhang's attack is far too optimistic as well.
 \begin{table}[htbp]
@@ -603,7 +604,7 @@ Although Zhang \etal has never fully implemented the CP-recovery phase of their 
   \item[Claim 3] The elements in the lists require at most 5 bytes of memory.
   \item[Claim 4] Each candidate in $L_{z_0z_1z_2z_3z_4}$ have 33 known bits.
 \end{description}
-Our practical implementation of the full attack proves that all the claims above are wrong. 
+Our practical implementation of the full attack proves that all the claims above are wrong.
 
 
 Since the merging of two lists $L_1,L_2$ requires $|L_1|\cdot |L_2|$ operations, it is impossible to get exact evaluation to the complexities without actually knowing the sizes of all the lists.
@@ -621,7 +622,7 @@ Zhang \etal's Claim 1 is wrong.
 The size of $L_{z_0z_1z_2z_3z_4}$ is $2^{24.21}> 2^{16.6}$.
 So Zhang \etal's Claim 2 is also wrong.
 
-The merging process in Fig. \ref{fig:MergeZhang} takes two lists denoted as $L_t$ and $L_{t+1}$. 
+The merging process in Fig. \ref{fig:MergeZhang} takes two lists denoted as $L_t$ and $L_{t+1}$.
 $L_{t}$ contains the partial states of $\vec{ s}^t$ while $L_{t+1}$ consists of partial states of $\vec{s}^{t+1}$.
 According to Section \ref{sec:MovePatternAndBC}, a $\vec{s}^t$ should take a move $m^t\in \{0,1,2,3\}$ before reaching $\vec{s}^{t+1}$ and that move $m^t$ is decided by the three clock bits $\vec{s}^t[8,29,51]$.
 So the merging step $\tilde{L}_t\leftarrow {\tt merge}(L_t, L_{t+1})$ is as follows:
@@ -629,8 +630,8 @@ So the merging step $\tilde{L}_t\leftarrow {\tt merge}(L_t, L_{t+1})$ is as foll
   \item Initialize the merged list as empty $\tilde{L}_t\leftarrow \phi$.
   \item For each $(\vec{s}^t,\vec{s}^{t+1})\in L_t\times L_{t+1}$, do the following steps:
   \begin{enumerate}
-    \item Identify the positions of the known bits in $\vec{s}^t$ denoted as $\lambda_0\subseteq [0,63]$. 
-    \item Determine the move $m^t$ according to 3 known clock bits $\vec{s}^t[8,29,51]$. 
+    \item Identify the positions of the known bits in $\vec{s}^t$ denoted as $\lambda_0\subseteq [0,63]$.
+    \item Determine the move $m^t$ according to 3 known clock bits $\vec{s}^t[8,29,51]$.
     \item Determine the state $\vec{\hat{s}}^t$ \st $\vec{\hat{s}}^t\xrightarrow[]{m^t} \vec{s}^{t+1}$
     \item Identify the positions of the known bits in $\vec{\hat{s}^t}$ denoted as $\lambda_1\subseteq [0,63]$
     \item If $\vec{\hat{s}}^t[\lambda_0\cap \lambda_1]=\vec{s}^t[\lambda_0\cap \lambda_1]$, store the vector $\vec{\tilde{s}}^t\leftarrow \vec{\hat{s}}^t \vee \vec{s}^t$ in $\tilde{L}_t$ where $\vee$ is bitwise OR.
@@ -639,17 +640,17 @@ So the merging step $\tilde{L}_t\leftarrow {\tt merge}(L_t, L_{t+1})$ is as foll
   \item Return $\tilde{L}_t$
 \end{enumerate}
 According to the description above, any element $\vec{s}\in L$ should not only contain the value but the positions, denoted as $\lambda$, of the known bits as well.
-At Level 1, since all list are generated through Algorithm \ref{alg:getLz0z1}, all elements share the same known-bit positions in \eqref{eq:KnownBitsL1}. 
+At Level 1, since all list are generated through Algorithm \ref{alg:getLz0z1}, all elements share the same known-bit positions in \eqref{eq:KnownBitsL1}.
 But the following Example \ref{examp:DifferentMoveKnownBits} shows that different moves will result in different known bit positions.
 Example \ref{examp:DifferentMoveKnownBits} indicates that the known bits of the merged partial state $\vec{\tilde{s}}^t$ may not be exactly the 21 bits given in \cite{AC:Zhang19}: they are also likely to be subsets of the 21 bits.
 \begin{example}\label{examp:DifferentMoveKnownBits}
   Let $(\vec{s}^0,\vec{s}^1)\in L_{z_0z_1}\times L_{z_1z_2}$.
-  We have $\lambda_0=\lambda$ in \eqref{eq:KnownBitsL1}. 
+  We have $\lambda_0=\lambda$ in \eqref{eq:KnownBitsL1}.
   If the move $m^0=0$ ($\vec{s}^0[8,29,51]\in\{(0,0,0),(1,1,1)\}$ according to \eqref{eq:MoveAndClockBitRelation} in Section \ref{sec:MoveVsClockGuess}), the known bit positions for $\vec{s}^1$ should be
   \[
   \lambda_1:=\{7-1,8-1,16-1,17-1,18-1,   28-1,29-1,38-1,39-1,40-1,  50-1,51-1,61-1,62-1,63-1  \}.
   \]
-  and $\tilde{\lambda}=\lambda_0 \cup \lambda_1$ is of size $|\tilde{\lambda}|=21$. 
+  and $\tilde{\lambda}=\lambda_0 \cup \lambda_1$ is of size $|\tilde{\lambda}|=21$.
   If the move is $m^0=1$ ($\vec{s}^0[8,29,51]\in  \{(1,0,0),(0,1,1)\}$), we have
   \[
   \lambda_1:=\{7,8,16,17,18,   28-1,29-1,38-1,39-1,40-1,  50-1,51-1,61-1,62-1,63-1  \}.
@@ -660,50 +661,50 @@ In order to keep merging the lists in Level 2-4, $\tilde{\lambda}$ containing th
 Since the lists in Level 4 contain partial states of 33 bits, the $\tilde{\lambda}$'s are of the same size of 33 bits.
 So the elements in the lists requires at most $\lceil 2\cdot 33/8\rceil=9$ bytes: Zhang \etal's Claim 3 is wrong.
 Same with Example \ref{examp:DifferentMoveKnownBits}, the $\tilde{\lambda}$ for $\vec{\tilde{s}}^t\in L_{z_0z_1z_2z_3z_4}$ are more likely to be subsets of the 33 bits: Claim 4 of Zhang \etal is wrong.
-In fact, according to our experiments, the number of known bits of $L_{z_0z_1z_2z_3z_4}$ elements are usually $|\tilde{\lambda}|\approx 30.14$, which is far below 33. 
-$|\tilde{\lambda}|$ can only be 33 when $m^0=\ldots= m^4=0$. 
-Such an event can happen with probability $2^{-10}$. 
+In fact, according to our experiments, the number of known bits of $L_{z_0z_1z_2z_3z_4}$ elements are usually $|\tilde{\lambda}|\approx 30.14$, which is far below 33.
+$|\tilde{\lambda}|$ can only be 33 when $m^0=\ldots= m^4=0$.
+Such an event can happen with probability $2^{-10}$.
 
 
 \subsection{Zhang \etal's Attack with The Original Clock-Guess-Based RP-Recovery}\label{sec:ZhangRpRecovery}
-We have supplemented all the details of the list merging operations in Section \ref{sec:ZhangWrongCompAnalysis}. 
-The whole CP-recovery phase in Fig. \ref{fig:MergeZhang} can now be carried out. 
-At the end of CP-recovery, the adversary have got the list $L_{z_0z_1z_2z_3z_4}$. 
-Each $\vec{\tilde{s}}^0\in L_{z_0z_1z_2z_3z_4}$ corresponds to a set $\tilde{\lambda}\subseteq [0,63]$ containing the positions of known state bits and it guarantees that the first 5 keystream bits are exactly $z_0,\ldots, z_4$. 
-The known bits $\vec{\tilde{s}}^0[\tilde{\lambda}]$ can deduce directly the first 5 moves $m^0,\ldots, m^4$. 
-Therefore, the bit conditions for each $\vec{\tilde{s}}^0$ is simply $\mathcal{BC}\leftarrow {\tt getBC}((m^0,\ldots, m^4), (z_0,\ldots, z_4))$ adding the bit value constraints of $\vec{\tilde{s}}^0[\tilde{\lambda}]$. 
-The number of bit conditions is $15+|\tilde{\lambda}|$. 
+We have supplemented all the details of the list merging operations in Section \ref{sec:ZhangWrongCompAnalysis}.
+The whole CP-recovery phase in Fig. \ref{fig:MergeZhang} can now be carried out.
+At the end of CP-recovery, the adversary have got the list $L_{z_0z_1z_2z_3z_4}$.
+Each $\vec{\tilde{s}}^0\in L_{z_0z_1z_2z_3z_4}$ corresponds to a set $\tilde{\lambda}\subseteq [0,63]$ containing the positions of known state bits and it guarantees that the first 5 keystream bits are exactly $z_0,\ldots, z_4$.
+The known bits $\vec{\tilde{s}}^0[\tilde{\lambda}]$ can deduce directly the first 5 moves $m^0,\ldots, m^4$.
+Therefore, the bit conditions for each $\vec{\tilde{s}}^0$ is simply $\mathcal{BC}\leftarrow {\tt getBC}((m^0,\ldots, m^4), (z_0,\ldots, z_4))$ adding the bit value constraints of $\vec{\tilde{s}}^0[\tilde{\lambda}]$.
+The number of bit conditions is $15+|\tilde{\lambda}|$.
 
-Then, according to Zhang \etal in \cite{AC:Zhang19}, the RP part is to be recovered by guessing the unknown bits of $\vec{\tilde{s}}^0$ corresponding to the clock bits $\vec{s}^i[8,29,51]$ for $i=5,6,\ldots, t-1$ and construct the corresponding linear system of bit conditions according to the clock bits and the output bits $z_0,\ldots, z_{t-1}$ as in \eqref{eq:BCLpSystem}. 
-According to the analysis in Section \ref{sec:MoveVsClockGuess}, the clock guessing strategy is equivalent to adding bit value conditions to the corresponding move-oriented bit conditions. 
-Therefore, for the guesses of the $3(t-5)$ bits $\vec{s}^5[8,29,51], \ldots, \vec{s}^{t-1}[8,29,51]$, the number of deduced bit conditions is $4(t-5)$. 
+Then, according to Zhang \etal in \cite{AC:Zhang19}, the RP part is to be recovered by guessing the unknown bits of $\vec{\tilde{s}}^0$ corresponding to the clock bits $\vec{s}^i[8,29,51]$ for $i=5,6,\ldots, t-1$ (equivalent to setting $y$ in \eqref{eq:RpGuessZhang} as $y=t-5$) and construct the corresponding linear system of bit conditions according to the clock bits and the output bits $z_0,\ldots, z_{t-1}$ as in \eqref{eq:BCLpSystem}.
+According to the analysis in Section \ref{sec:MoveVsClockGuess}, the clock guessing strategy is equivalent to adding bit value conditions to the corresponding move-oriented bit conditions.
+Therefore, for the guesses of the $3(t-5)$ bits $\vec{s}^5[8,29,51], \ldots, \vec{s}^{t-1}[8,29,51]$, the number of deduced bit conditions is $4(t-5)$.
 So the whole process of Zhang \etal's attack can now be summarized as follows:
 \begin{enumerate}
   \item Query the A5/1 encryption oracle for $\ell$ keystream bits $z^0,\ldots, z^{\ell}$
   \item Run the merging process in Fig. \ref{fig:MergeZhang} and acquire the list of candidates $L_{z_0z_1z_2z_3z_4}$ for the CP part of A5/1.
-   \item Initialize an empty set $\mathcal{S}$ of $\vec{s^0}$ candidates
-   \item For each $\vec{\tilde{s}^0}\in L_{z_0z_1z_2z_3z_4}$ \textbf{(RP-Recovery)}
+   \item Initialize an empty set $\mathcal{S}$ of $\vec{s}^0$ candidates
+   \item For each $\vec{\tilde{s}}^0\in L_{z_0z_1z_2z_3z_4}$ \textbf{(RP-Recovery)}
    \begin{enumerate}
      \item Deduce the 5 moves $(m_0,\ldots, m_4)$ and the known bit position set $\tilde{\lambda}$
      \item For some $t \in [5,\ell-1]$, we guess the $3(t-5)$ clock bits corresponding to $\vec{s}^5[8,29,51], \ldots, \vec{s}^{t-1}[8,29,51]$ and do the following substeps:
      \begin{enumerate}
-     \item Deduce the move guesses $m^5,\ldots, m^{t-1}$ and deduce the bit conditions 
+     \item Deduce the move guesses $m^5,\ldots, m^{t-1}$ and deduce the bit conditions
      \[
      \mathcal{BC}\leftarrow {\tt getBC}((m^0,\ldots, m^{t-1}), (z^0,\ldots, z^{t-1}))
      \]
-     \item For all $i\in \tilde{\lambda}$, add the bit condition $x_i=\vec{\tilde{s}^0}[i]$ to $\mathcal{BC}$
+     \item For all $i\in \tilde{\lambda}$, add the bit condition $x_i=\vec{\tilde{s}}^0[i]$ to $\mathcal{BC}$
      \item For $\vec{s}^i[8]$ ($i=5,\ldots, t-1$), add the bit value constraint $W^{i}[8]\cdot \vec{x}=\vec{s}^i[8]$ to $\mathcal{BC}$
      \item Deduce the $A$ and $\vec b$ in \eqref{eq:BCLpSystem} according to $\mathcal{BC}$ and compute the extended matrix $E$ in \eqref{eq:ExtendedMatrixOfA}
-        \item Compute $order(A)$ and $order(E)$, if $order(A)\neq order(E)$, such a clock guess is wrong, go back to Step 2 for the next guess of $\vec{s}^5[8,29,51], \ldots, \vec{s}^{t-1}[8,29,51]$
-        \item For all $2^{64-order(A)}$ solutions to $A\vec x^T=b^T$, set $\vec{\hat{s}^0}\leftarrow \vec x$ and generate the keystream bits $\hat{z}^0,\ldots, \hat{z}^{t-1},\hat{z}^{t},\ldots, \hat{z}^{\ell-1}$
-        \item If $(\hat{z}^{t},\ldots, \hat{z}^{\ell-1})=(z^{t},\ldots, z^{\ell-1})$, add such $\vec{\hat{s}^0}$ into $\mathcal{S}$
+        \item Compute $order(A)$ and $order(E)$, if $order(A)\neq order(E)$, such a clock guess is wrong, go back to Step (b) for the next guess of $\vec{s}^5[8,29,51], \ldots, \vec{s}^{t-1}[8,29,51]$
+        \item For all $2^{64-order(A)}$ solutions to $A\vec x^T=b^T$, set $\vec{\hat{s}}^0\leftarrow \vec x$ and generate the keystream bits $\hat{z}^0,\ldots, \hat{z}^{t-1},\hat{z}^{t},\ldots, \hat{z}^{\ell-1}$
+        \item If $(\hat{z}^{t},\ldots, \hat{z}^{\ell-1})=(z^{t},\ldots, z^{\ell-1})$, add such $\vec{\hat{s}}^0$ into $\mathcal{S}$
       \end{enumerate}
    \end{enumerate}
   \item Return $\mathcal{S}$
 \end{enumerate}
 
-\noindent\textbf{Complexity Analysis. } 
-According to \eqref{eq:ListSizes}, there are $2^{24.21}$ candidate $\vec{\tilde{s}}^0$ in $L_{z_0z_1z_2z_3z_4}$. 
+\noindent\textbf{Complexity Analysis. }
+According to \eqref{eq:ListSizes}, there are $2^{24.21}$ candidate $\vec{\tilde{s}}^0$ in $L_{z_0z_1z_2z_3z_4}$.
 In Step 4.(b), there are $2^{3t-15}$ possible guesses and we assume that only $\alpha_t 2^{3t-15}$ of them can pass the $order(A)=order(E)$ test at Step 4.(b).v where $0\leq \alpha_t \leq 1$.
 We denote the averaging $order(A)$ as $\beta_t$.
 The analysis in Section \ref{sec:ZhangWrongCompAnalysis}, the merging process in Step 2 has complexity $2^{40.92}$.
@@ -715,7 +716,7 @@ Comp&=2^{40.92}+2^{24.21+3t-15}+\alpha_t \cdot 2^{24.21+3t-15+64-\beta_t}\\
 \end{aligned}
 \end{equation}
 Same with Section \ref{sec:MovePatternAndBC}, we randomly select $2^{30}$ $\left(\vec{\tilde{s}^0}, \vec{s}^5[8,29,51], \ldots, \vec{s}^{t-1}[8,29,51], (z^5,\ldots, z^m)\right)$ triplets and do the 4.(b).v test to compute the averaging $\alpha_t$ and $\beta_t$ for different $t$'s.
-For $5\leq t\leq 21$, the $\alpha_t$, $\beta_t$ and $Comp$ are listed in Table \ref{tab:ZhangAlphaAndBeta}. 
+For $5\leq t\leq 21$, the $\alpha_t$, $\beta_t$ and $Comp$ are listed in Table \ref{tab:ZhangAlphaAndBeta}.
 As can be seen, the complexities are constantly larger than $2^{52}$, indicating that Zhang \etal's complexity evaluation in \cite{AC:Zhang19} is far too optimistic and is no better than our state-recovery attack in Section \ref{sec:OurGuessAndDetermine}.
 The lowest time complexity is $2^{52.159}$ and it appears at $t=12$.
 The memory complexity is dominated by the size of $L_{z_0z_1z_2z_3z_4}$ which is $2^{24.21}$ according to \eqref{eq:ListSizes}.
@@ -752,27 +753,27 @@ According to the Section \ref{sec:ZhangWrongP1}, the success probability can be 
 
 
 \subsection{Modified Zhang \etal's Attack with Our Move-Based RP-Recovery}\label{sec:OurRpRecovery}
-According to the relationship between our move guess and the conventional clock guess strategies revealed in Section \ref{sec:MoveVsClockGuess}, Zhang \etal's clock-guess-based RP-recovery in Section \ref{sec:ZhangRpRecovery} can be replaced with our move-guess-based strategy. 
+According to the relationship between our move guess and the conventional clock guess strategies revealed in Section \ref{sec:MoveVsClockGuess}, Zhang \etal's clock-guess-based RP-recovery in Section \ref{sec:ZhangRpRecovery} can be replaced with our move-guess-based strategy.
 We simply rewrite the RP-recovery phase of this modified attack as follows:
 \begin{enumerate}
-\setcounter{enumi}{3} 
+\setcounter{enumi}{3}
    \item For each $\vec{\tilde{s}^0}\in L_{z_0z_1z_2z_3z_4}$ \textbf{(RP-Recovery)}
    \begin{enumerate}
      \item Deduce the 5 moves $(m_0,\ldots, m_4)$ and the known bit position set $\tilde{\lambda}$
-     \item For some $t \in [6,\ell)$, we guess the $2^{2(t-5)}$ movements $(m^5,\ldots, m^t)$, we acquire the bit conditions $\mathcal{BC}\leftarrow {\tt getBC}((m^0,\ldots, m^t), (z^0,\ldots, z^t))$ and do the following substeps:
+     \item For some $t \in [5,\ell-1]$, we guess the $2^{2(t-5)}$ movements $(m^5,\ldots, m^{t-1})$, we acquire the bit conditions $\mathcal{BC}\leftarrow {\tt getBC}((m^0,\ldots, m^{t-1}), (z^0,\ldots, z^{t-1}))$ and do the following substeps:
      \begin{enumerate}
-        \item For all $i\in \tilde{\lambda}$, add the bit condition $x_i=\vec{\tilde{s}^0}[i]$ to $\mathcal{BC}$
+        \item For all $i\in \tilde{\lambda}$, add the bit condition $x_i=\vec{\tilde{s}}^0[i]$ to $\mathcal{BC}$
         \item Deduce the $A$ and $\vec b$ in \eqref{eq:BCLpSystem} according to $\mathcal{BC}$ and compute the extended matrix $E$ in \eqref{eq:ExtendedMatrixOfA}
-        \item Compute $order(A)$ and $order(E)$, if $order(A)\neq order(E)$, such a movement guess is wrong, go back to Step 2 for the next movement guess
-        \item For all $2^{64-order(A)}$ solutions to $A\vec x^T=b^T$, set $\vec{\hat{s}^0}\leftarrow \vec x$ and generate the keystream bits $\hat{z}^0,\ldots, \hat{z}^t,\hat{z}^{t+1},\ldots, \hat{z}^{\ell}$
-        \item If $(\hat{z}^{t+1},\ldots, \hat{z}^{\ell})=(z^{t+1},\ldots, z^{\ell})$, add such $\vec{\hat{s}^0}$ into $\mathcal{S}$
+        \item Compute $order(A)$ and $order(E)$, if $order(A)\neq order(E)$, such a movement guess is wrong, go back to Step (b) for the next guess of moves $m^5,\ldots, m^{t-1}$
+        \item For all $2^{64-order(A)}$ solutions to $A\vec x^T=b^T$, set $\vec{\hat{s}}^0\leftarrow \vec x$ and generate the keystream bits $\hat{z}^0,\ldots, \hat{z}^{t-1},\hat{z}^{t},\ldots, \hat{z}^{\ell-1}$
+        \item If $(\hat{z}^{t},\ldots, \hat{z}^{\ell-1})=(z^{t},\ldots, z^{\ell-1})$, add such $\vec{\hat{s}}^0$ into $\mathcal{S}$
       \end{enumerate}
    \end{enumerate}
 \end{enumerate}
 
 \noindent\textbf{Complexity Analysis. }
 In Step 4.(b), there are $2^{2t-10}$ candidate moves $(m^0,\ldots, m^{t})$ and we assume that only $\alpha_t 2^{2t-10}$ moves can pass the $order(A)=order(E)$ test at Step 4.(b).iii where $0\leq \alpha_t \leq 1$.
-We denote the averaging $order(A)$ as $\beta_t$. 
+We denote the averaging $order(A)$ as $\beta_t$.
 According to \eqref{eq:ListSizes}, the size of $L_{z_0z_1z_2z_3z_4}$ is approximately $2^{24.21}$.
 The analysis in Section \ref{sec:ZhangWrongCompAnalysis}, the merging process in Step 2 has complexity $2^{40.92}$.
 With $\alpha_t ,\beta_t $, the averaging time complexity can be computed as \eqref{eq:ZhangComplexityCorrect}.
@@ -786,9 +787,9 @@ For $6\leq t\leq 21$, the $\alpha_t$, $\beta_t$ and $Comp$ are listed in Table \
 As can be seen, the complexities are constantly larger than $2^{50}$ which is no better than our guess-and-determine attack in Section \ref{sec:OurGuessAndDetermine} but is lower than Zhang \etal's original one in Section \ref{sec:ZhangRpRecovery}.
 The lowest possible complexity is $2^{50.567}$ and it appears at $t=16$.
 The memory complexity and the success probability are identical to those of Zhang \etal's original attack which are $2^{24.21}$ and 0.8942 respectively.
-It is noticeable that the $\beta_t$ in Table \ref{tab:ZhangAlphaAndBetaOriginal} grows faster than that in Table \ref{tab:ZhangAlphaAndBeta}, indicating that clock guess can result in a faster growth in the order of matrix in \eqref{eq:BCLpSystem}. 
-But such a growth cannot guarantee a better filter when applied to state-recovery attacks: 
-this is a fact that can only be discovered by solid experiments and accurate implementations. 
+It is noticeable that the $\beta_t$ in Table \ref{tab:ZhangAlphaAndBetaOriginal} grows faster than that in Table \ref{tab:ZhangAlphaAndBeta}, indicating that clock guess can result in a faster growth in the order of matrix in \eqref{eq:BCLpSystem}.
+But such a growth cannot guarantee a better filter when applied to state-recovery attacks:
+this is a fact that can only be discovered by solid experiments and accurate implementations.
 
 \begin{table}[htbp]
   \centering
